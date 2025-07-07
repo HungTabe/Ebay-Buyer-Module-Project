@@ -1,0 +1,39 @@
+# Visual Studio files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio build artifacts
+bin/
+obj/
+*.exe
+*.pdb
+*.dll
+*.cache
+*.csproj.user
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency directories
+node_modules/
+
+# Database files
+*.mdf
+*.ldf
+
+# Miscellaneous
+Thumbs.db
+.DS_Store
+*.bak
+*.swp
+*.tmp
