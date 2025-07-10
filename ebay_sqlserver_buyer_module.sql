@@ -60,6 +60,18 @@ CREATE TABLE [ProductImage] (
     [isPrimary] BIT DEFAULT 0
 );
 
+-- Coupon
+CREATE TABLE [Coupon] (
+    [id] INT IDENTITY(1,1) PRIMARY KEY,
+    [code] NVARCHAR(50),
+    [discountPercent] DECIMAL(5,2),
+    [startDate] DATETIME,
+    [endDate] DATETIME,
+    [maxUsage] INT,
+    [productId] INT NULL FOREIGN KEY REFERENCES [Product](id),
+    [usedCount] INT DEFAULT 0 -- Added for tracking usage
+);
+
 -- OrderTable
 CREATE TABLE [OrderTable] (
     [id] INT IDENTITY(1,1) PRIMARY KEY,
@@ -139,18 +151,6 @@ CREATE TABLE [Message] (
     [content] NVARCHAR(MAX),
     [timestamp] DATETIME,
     [isRead] BIT DEFAULT 0 -- Added for message status
-);
-
--- Coupon
-CREATE TABLE [Coupon] (
-    [id] INT IDENTITY(1,1) PRIMARY KEY,
-    [code] NVARCHAR(50),
-    [discountPercent] DECIMAL(5,2),
-    [startDate] DATETIME,
-    [endDate] DATETIME,
-    [maxUsage] INT,
-    [productId] INT NULL FOREIGN KEY REFERENCES [Product](id),
-    [usedCount] INT DEFAULT 0 -- Added for tracking usage
 );
 
 -- Inventory
