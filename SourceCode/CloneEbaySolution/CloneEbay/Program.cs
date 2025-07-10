@@ -1,7 +1,46 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using CloneEbay.Data;
+using CloneEbay.Services;
+using CloneEbay.Middleware;
+using Microsoft.EntityFrameworkCore;
+using CloneEbay.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// Add DbContext
+builder.Services.AddDbContext<CloneEbayDbContext>();
+
+// Add AuthService
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+// JWT Configuration
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = jwtSettings["Key"];
+var issuer = jwtSettings["Issuer"];
+var audience = jwtSettings["Audience"];
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
 
 var app = builder.Build();
 
@@ -18,6 +57,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Add CSRF protection
+app.UseAntiforgery();
+
+// Add JWT middleware to handle cookies
+app.UseJwtMiddleware();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();

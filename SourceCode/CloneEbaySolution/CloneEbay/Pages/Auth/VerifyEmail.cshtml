@@ -1,0 +1,35 @@
+@page
+@model CloneEbay.Pages.VerifyEmailModel
+@{
+    ViewData["Title"] = "Verify Email";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Email Verification</h3>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.IsSuccess)
+                    {
+                        <div class="alert alert-success">
+                            <h4>Email Verified Successfully!</h4>
+                            <p>Your account has been verified. You can now login.</p>
+                            <a asp-page="/Auth/Login" class="btn btn-primary">Go to Login</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            <h4>Verification Failed</h4>
+                            <p>@Model.Message</p>
+                            <a asp-page="/Register" class="btn btn-secondary">Back to Register</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
