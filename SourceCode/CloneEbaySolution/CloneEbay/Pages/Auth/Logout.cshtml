@@ -1,0 +1,24 @@
+@page
+@model CloneEbay.Pages.LogoutModel
+@{
+    ViewData["Title"] = "Logout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Logout</h3>
+                </div>
+                <div class="card-body text-center">
+                    <p>Are you sure you want to logout?</p>
+                    <form method="post" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-danger">Yes, Logout</button>
+                        <a asp-page="/Index" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

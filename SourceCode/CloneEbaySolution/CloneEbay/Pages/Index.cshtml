@@ -1,10 +1,29 @@
 ﻿@page
 @model IndexModel
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Home page";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to CloneEbay</h1>
+    <p>Your online marketplace for buying and selling.</p>
+    
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="alert alert-success mt-4">
+            <h5>Welcome back, @User.Identity.Name!</h5>
+            <p>You are logged in as: @User.FindFirst(ClaimTypes.Email)?.Value</p>
+            <p>Role: @User.FindFirst(ClaimTypes.Role)?.Value</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-4">
+            <h5>Please login to continue</h5>
+            <p>You need to be logged in to access all features.</p>
+            <a asp-page="/Auth/Login" class="btn btn-primary">Login</a>
+            <a asp-page="/Auth/Register" class="btn btn-secondary">Register</a>
+        </div>
+    }
 </div>
