@@ -18,6 +18,9 @@ builder.Services.AddDbContext<CloneEbayDbContext>();
 // Add AuthService
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Add ProductService
+builder.Services.AddScoped<IProductService, ProductService>();
+
 
 // JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
