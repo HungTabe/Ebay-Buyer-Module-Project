@@ -21,6 +21,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Add ProductService
 builder.Services.AddScoped<IProductService, ProductService>();
 
+// Add CartService
+builder.Services.AddScoped<CartService>();
+
+// Add Session and IHttpContextAccessor
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
+
 
 // JWT Configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -62,6 +69,9 @@ app.UseRouting();
 
 // Add CSRF protection
 app.UseAntiforgery();
+
+// Add Session middleware
+app.UseSession();
 
 // Add JWT middleware to handle cookies
 app.UseJwtMiddleware();
