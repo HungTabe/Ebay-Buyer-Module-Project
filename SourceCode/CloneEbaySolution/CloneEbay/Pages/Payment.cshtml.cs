@@ -17,6 +17,8 @@ namespace CloneEbay.Pages
         }
 
         public OrderTable? Order { get; set; }
+        public string? CouponCode { get; set; }
+        public decimal? CouponDiscountPercent { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int orderId)
         {
@@ -24,9 +26,15 @@ namespace CloneEbay.Pages
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .Include(o => o.Address)
+                .Include(o => o.Coupon)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
             if (Order == null)
                 return RedirectToPage("/Error");
+            if (Order.Coupon != null)
+            {
+                CouponCode = Order.Coupon.Code;
+                CouponDiscountPercent = Order.Coupon.DiscountPercent;
+            }
             return Page();
         }
 

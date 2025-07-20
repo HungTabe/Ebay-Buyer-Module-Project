@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using CloneEbay.Interfaces;
 
 namespace CloneEbay.Pages
 {
@@ -16,11 +17,13 @@ namespace CloneEbay.Pages
     {
         private readonly CloneEbayDbContext _db;
         private readonly CartService _cartService;
+        private readonly IOrderService _orderService;
 
-        public OrderModel(CloneEbayDbContext db, CartService cartService)
+        public OrderModel(CloneEbayDbContext db, CartService cartService, IOrderService orderService)
         {
             _db = db;
             _cartService = cartService;
+            _orderService = orderService;
         }
 
         public List<CartItem> CartItems { get; set; } = new();
@@ -33,6 +36,12 @@ namespace CloneEbay.Pages
         public Address NewAddress { get; set; } = new();
         [BindProperty]
         public bool AddNewAddress { get; set; }
+        [BindProperty]
+        public string CouponCode { get; set; } = string.Empty;
+        public string CouponError { get; set; } = string.Empty;
+        public decimal CouponDiscountPercent { get; set; } = 0;
+        public decimal DiscountedTotal { get; set; } = 0;
+        public int? CouponId { get; set; } = null;
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -43,6 +52,15 @@ namespace CloneEbay.Pages
             CartItems = _cartService.GetCartItems();
             if (Addresses.Any(a => a.IsDefault == true))
                 SelectedAddressId = Addresses.First(a => a.IsDefault == true).Id;
+            // Coupon logic for GET (show discount if code in query)
+            if (!string.IsNullOrEmpty(CouponCode))
+            {
+                await ApplyCouponAsync();
+            }
+            else
+            {
+                DiscountedTotal = TotalPrice;
+            }
             return Page();
         }
 
@@ -81,13 +99,35 @@ namespace CloneEbay.Pages
                 Addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
                 return Page();
             }
+            // Coupon validation
+            CouponDiscountPercent = 0;
+            DiscountedTotal = TotalPrice;
+            CouponId = null;
+            if (!string.IsNullOrWhiteSpace(CouponCode))
+            {
+                var couponResult = await _orderService.ValidateAndApplyCouponAsync(CouponCode, CartItems);
+                if (!couponResult.IsValid)
+                {
+                    CouponError = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ.";
+                    Addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
+                    return Page();
+                }
+                CouponDiscountPercent = couponResult.DiscountPercent;
+                CouponId = couponResult.CouponId;
+                DiscountedTotal = TotalPrice * (1 - (CouponDiscountPercent / 100));
+            }
+            else
+            {
+                DiscountedTotal = TotalPrice;
+            }
             var order = new OrderTable
             {
                 BuyerId = userId,
                 AddressId = address.Id,
                 OrderDate = DateTime.UtcNow,
-                TotalPrice = CartItems.Sum(x => x.Price * x.Quantity),
-                Status = "Pending"
+                TotalPrice = DiscountedTotal,
+                Status = "Pending",
+                CouponId = CouponId
             };
             _db.OrderTables.Add(order);
             await _db.SaveChangesAsync();
@@ -102,9 +142,39 @@ namespace CloneEbay.Pages
                 };
                 _db.OrderItems.Add(orderItem);
             }
+            // Update coupon usage if used
+            if (CouponId.HasValue)
+            {
+                var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Id == CouponId.Value);
+                if (coupon != null)
+                {
+                    coupon.UsedCount = (coupon.UsedCount ?? 0) + 1;
+                }
+            }
             await _db.SaveChangesAsync();
             _cartService.ClearCart();
             return RedirectToPage("/Payment", new { orderId = order.Id });
+        }
+
+        private async Task ApplyCouponAsync()
+        {
+            CouponDiscountPercent = 0;
+            DiscountedTotal = TotalPrice;
+            CouponId = null;
+            if (!string.IsNullOrWhiteSpace(CouponCode))
+            {
+                var couponResult = await _orderService.ValidateAndApplyCouponAsync(CouponCode, CartItems);
+                if (couponResult.IsValid)
+                {
+                    CouponDiscountPercent = couponResult.DiscountPercent;
+                    CouponId = couponResult.CouponId;
+                    DiscountedTotal = TotalPrice * (1 - (CouponDiscountPercent / 100));
+                }
+                else
+                {
+                    CouponError = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ.";
+                }
+            }
         }
 
         private int? GetUserId()

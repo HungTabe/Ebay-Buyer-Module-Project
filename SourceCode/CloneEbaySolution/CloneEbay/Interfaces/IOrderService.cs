@@ -1,3 +1,4 @@
+using CloneEbay.Data.Entities;
 using CloneEbay.Models;
 
 namespace CloneEbay.Interfaces
@@ -16,5 +17,14 @@ namespace CloneEbay.Interfaces
         Task<ReturnRequestViewModel?> GetReturnRequestAsync(int returnRequestId, int userId);
         Task<bool> CanReturnOrderAsync(int orderId, int userId);
         Task<bool> ConfirmOrderDeliveredAsync(int orderId, int userId);
+        /// <summary>
+        /// Validates a coupon code and returns the discount percent if valid, otherwise 0.
+        /// </summary>
+        Task<CouponValidationResult> ValidateAndApplyCouponAsync(string couponCode, List<CartItem> cartItems);
+        
+        /// <summary>
+        /// Gets order with coupon information for display purposes.
+        /// </summary>
+        Task<OrderTable?> GetOrderWithCouponAsync(int orderId, int userId);
     }
 } 

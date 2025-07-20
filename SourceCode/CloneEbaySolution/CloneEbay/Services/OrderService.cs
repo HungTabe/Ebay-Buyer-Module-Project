@@ -3,6 +3,9 @@ using CloneEbay.Data.Entities;
 using CloneEbay.Interfaces;
 using CloneEbay.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CloneEbay.Services
 {
@@ -20,6 +23,7 @@ namespace CloneEbay.Services
             var query = _context.OrderTables
                 .Include(o => o.Address)
                 .Include(o => o.OrderItems)
+                .Include(o => o.Coupon)
                 .Where(o => o.BuyerId == userId)
                 .OrderByDescending(o => o.OrderDate);
 
@@ -43,7 +47,8 @@ namespace CloneEbay.Services
                 ItemCount = o.OrderItems?.Count ?? 0,
                 AddressInfo = o.Address != null 
                     ? $"{o.Address.FullName ?? ""} - {o.Address.City ?? ""}, {o.Address.State ?? ""}"
-                    : "No address"
+                    : "No address",
+                CouponCode = o.Coupon?.Code
             }).ToList();
 
             return new OrderHistoryViewModel
@@ -182,6 +187,9 @@ namespace CloneEbay.Services
         {
             var query = _context.ReturnRequests
                 .Include(r => r.Order)
+                    .ThenInclude(o => o.Address)
+                .Include(r => r.Order)
+                    .ThenInclude(o => o.Coupon)
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedAt);
 
@@ -210,7 +218,8 @@ namespace CloneEbay.Services
                     ItemCount = r.Order.OrderItems?.Count ?? 0,
                     AddressInfo = r.Order.Address != null 
                         ? $"{r.Order.Address.FullName ?? ""} - {r.Order.Address.City ?? ""}, {r.Order.Address.State ?? ""}"
-                        : "No address"
+                        : "No address",
+                    CouponCode = r.Order.Coupon?.Code
                 } : null
             }).ToList();
 
@@ -228,6 +237,9 @@ namespace CloneEbay.Services
         {
             var returnRequest = await _context.ReturnRequests
                 .Include(r => r.Order)
+                    .ThenInclude(o => o.Address)
+                .Include(r => r.Order)
+                    .ThenInclude(o => o.Coupon)
                 .FirstOrDefaultAsync(r => r.Id == returnRequestId && r.UserId == userId);
 
             if (returnRequest == null)
@@ -250,7 +262,8 @@ namespace CloneEbay.Services
                     ItemCount = returnRequest.Order.OrderItems?.Count ?? 0,
                     AddressInfo = returnRequest.Order.Address != null 
                         ? $"{returnRequest.Order.Address.FullName ?? ""} - {returnRequest.Order.Address.City ?? ""}, {returnRequest.Order.Address.State ?? ""}"
-                        : "No address"
+                        : "No address",
+                    CouponCode = returnRequest.Order.Coupon?.Code
                 } : null
             };
         }
@@ -291,6 +304,52 @@ namespace CloneEbay.Services
 
             
 
+        }
+
+        public async Task<CouponValidationResult> ValidateAndApplyCouponAsync(string couponCode, List<CartItem> cartItems)
+        {
+            if (string.IsNullOrWhiteSpace(couponCode))
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Please enter a coupon code." };
+            }
+
+            var now = DateTime.UtcNow;
+            var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode);
+            if (coupon == null)
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Coupon code not found." };
+            }
+            if (coupon.StartDate.HasValue && coupon.StartDate > now)
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Coupon is not yet valid." };
+            }
+            if (coupon.EndDate.HasValue && coupon.EndDate < now)
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Coupon has expired." };
+            }
+            if (coupon.MaxUsage.HasValue && coupon.UsedCount.HasValue && coupon.UsedCount >= coupon.MaxUsage)
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Coupon usage limit reached." };
+            }
+            // If coupon is for a specific product, check if it's in the cart
+            if (coupon.ProductId.HasValue && !cartItems.Any(ci => ci.ProductId == coupon.ProductId))
+            {
+                return new CouponValidationResult { IsValid = false, ErrorMessage = "Coupon is not applicable to your cart items." };
+            }
+            return new CouponValidationResult
+            {
+                IsValid = true,
+                DiscountPercent = coupon.DiscountPercent ?? 0,
+                CouponId = coupon.Id,
+                ErrorMessage = null
+            };
+        }
+
+        public async Task<OrderTable?> GetOrderWithCouponAsync(int orderId, int userId)
+        {
+            return await _context.OrderTables
+                .Include(o => o.Coupon)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerId == userId);
         }
     }
 } 

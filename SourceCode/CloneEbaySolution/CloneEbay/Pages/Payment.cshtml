@@ -45,6 +45,11 @@ else
             </table>
             <div class="text-end">
                 <b>Tổng cộng: $@Model.Order.TotalPrice?.ToString("F2")</b>
+                @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
+                {
+                    <div><b>Mã giảm giá: @Model.CouponCode (@Model.CouponDiscountPercent% off)</b></div>
+                    <div><b>Thành tiền sau giảm: $@(Model.Order.TotalPrice?.ToString("F2"))</b></div>
+                }
             </div>
         </div>
     </div>
