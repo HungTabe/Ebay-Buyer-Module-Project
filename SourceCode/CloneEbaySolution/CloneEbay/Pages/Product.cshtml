@@ -236,6 +236,116 @@
                 </div>
             </div>
         </div>
+
+        <!-- Product Reviews Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>Customer Reviews
+                        </h5>
+                        <a href="/ProductReviews/@Model.Product.Id" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View All Reviews
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.ProductReviews != null && Model.ProductReviews.Reviews.Any())
+                        {
+                            <!-- Reviews Summary -->
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    <div class="display-6 text-warning mb-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(Model.ProductReviews.AverageRating))
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                            else if (i - Model.ProductReviews.AverageRating < 1)
+                                            {
+                                                <i class="fas fa-star-half-alt"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="far fa-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="h5 mb-1">@Model.ProductReviews.AverageRating.ToString("F1") out of 5</div>
+                                    <div class="text-muted">@Model.ProductReviews.TotalReviews review@(Model.ProductReviews.TotalReviews != 1 ? "s" : "")</div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="text-start">
+                                        @for (int rating = 5; rating >= 1; rating--)
+                                        {
+                                            var count = Model.ProductReviews.Reviews.Count(r => r.Rating == rating);
+                                            var percentage = Model.ProductReviews.TotalReviews > 0 ? (double)count / Model.ProductReviews.TotalReviews * 100 : 0;
+                                            
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="me-2">@rating <i class="fas fa-star text-warning"></i></span>
+                                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                    <div class="progress-bar bg-warning" style="width: @percentage%"></div>
+                                                </div>
+                                                <span class="text-muted small">@count</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Reviews -->
+                            <h6 class="mb-3">Recent Reviews</h6>
+                            @foreach (var review in Model.ProductReviews.Reviews.Take(3))
+                            {
+                                <div class="border-bottom pb-3 mb-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold">@review.ReviewerName</div>
+                                            <div class="text-warning">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= review.Rating)
+                                                    {
+                                                        <i class="fas fa-star"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="far fa-star"></i>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                    <p class="mb-0">@review.Comment</p>
+                                </div>
+                            }
+
+                            @if (Model.ProductReviews.Reviews.Count > 3)
+                            {
+                                <div class="text-center mt-3">
+                                    <a href="/ProductReviews/@Model.Product.Id" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-right me-2"></i>View All @Model.ProductReviews.TotalReviews Reviews
+                                    </a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-star text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3 text-muted">No reviews yet</h5>
+                                <p class="text-muted mb-3">Be the first to review this product!</p>
+                                <a href="/ProductReviews/@Model.Product.Id" class="btn btn-primary">
+                                    <i class="fas fa-edit me-2"></i>Write the First Review
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 }
 else

@@ -152,5 +152,96 @@ namespace CloneEbay.Services
                 CurrentBid = product.Bids?.OrderByDescending(b => b.Amount).FirstOrDefault()?.Amount
             };
         }
+
+        public async Task<ProductReviewViewModel> GetProductReviewsAsync(int productId)
+        {
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return new ProductReviewViewModel();
+
+            var reviews = await _context.Reviews
+                .Include(r => r.Reviewer)
+                .Where(r => r.ProductId == productId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            var reviewViewModels = reviews.Select(r => new ReviewViewModel
+            {
+                Id = r.Id,
+                ProductId = r.ProductId ?? 0,
+                ReviewerId = r.ReviewerId ?? 0,
+                ReviewerName = r.Reviewer?.Username ?? "Anonymous",
+                Rating = r.Rating ?? 0,
+                Comment = r.Comment ?? "",
+                CreatedAt = r.CreatedAt ?? DateTime.UtcNow
+            }).ToList();
+
+            var averageRating = reviews.Any() ? reviews.Average(r => r.Rating ?? 0) : 0;
+
+            return new ProductReviewViewModel
+            {
+                ProductId = productId,
+                ProductTitle = product.Title ?? "",
+                Reviews = reviewViewModels,
+                AverageRating = Math.Round(averageRating, 1),
+                TotalReviews = reviews.Count,
+                NewReview = new ReviewModel { ProductId = productId }
+            };
+        }
+
+        public async Task<bool> AddProductReviewAsync(ReviewModel review, int userId)
+        {
+            try
+            {
+                // Check if user has already reviewed this product
+                var existingReview = await _context.Reviews
+                    .FirstOrDefaultAsync(r => r.ProductId == review.ProductId && r.ReviewerId == userId);
+
+                if (existingReview != null)
+                {
+                    // Update existing review
+                    existingReview.Rating = review.Rating;
+                    existingReview.Comment = review.Comment;
+                    existingReview.CreatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    // Create new review
+                    var newReview = new Review
+                    {
+                        ProductId = review.ProductId,
+                        ReviewerId = userId,
+                        Rating = review.Rating,
+                        Comment = review.Comment,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Reviews.Add(newReview);
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> HasUserReviewedProductAsync(int productId, int userId)
+        {
+            return await _context.Reviews
+                .AnyAsync(r => r.ProductId == productId && r.ReviewerId == userId);
+        }
+
+        public async Task<bool> CanUserReviewProductAsync(int productId, int userId)
+        {
+            // Check if the user has an order for the product with status 'delivered'
+            return await _context.OrderItems
+                .Where(oi => oi.ProductId == productId)
+                .AnyAsync(oi => oi.Order != null && oi.Order.BuyerId == userId && oi.Order.Status != null && oi.Order.Status.ToLower() == "delivered");
+        }
     }
 } 

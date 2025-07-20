@@ -1,0 +1,272 @@
+@page "{id:int}"
+@model CloneEbay.Pages.ProductReviewsModel
+@{
+    ViewData["Title"] = $"Reviews - {Model.ProductReview.ProductTitle}";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/Products">Products</a></li>
+            <li class="breadcrumb-item"><a href="/Product/@Model.ProductReview.ProductId">@Model.ProductReview.ProductTitle</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reviews</li>
+        </ol>
+    </nav>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Reviews Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="card-title">@Model.ProductReview.ProductTitle</h4>
+                    
+                    <!-- Average Rating -->
+                    <div class="mb-3">
+                        <div class="display-6 text-warning mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Round(Model.ProductReview.AverageRating))
+                                {
+                                    <i class="fas fa-star"></i>
+                                }
+                                else if (i - Model.ProductReview.AverageRating < 1)
+                                {
+                                    <i class="fas fa-star-half-alt"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-star"></i>
+                                }
+                            }
+                        </div>
+                        <div class="h5 mb-1">@Model.ProductReview.AverageRating.ToString("F1") out of 5</div>
+                        <div class="text-muted">@Model.ProductReview.TotalReviews review@(Model.ProductReview.TotalReviews != 1 ? "s" : "")</div>
+                    </div>
+
+                    <!-- Rating Distribution -->
+                    @if (Model.ProductReview.Reviews.Any())
+                    {
+                        <div class="text-start">
+                            @for (int rating = 5; rating >= 1; rating--)
+                            {
+                                var count = Model.ProductReview.Reviews.Count(r => r.Rating == rating);
+                                var percentage = Model.ProductReview.TotalReviews > 0 ? (double)count / Model.ProductReview.TotalReviews * 100 : 0;
+                                
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="me-2">@rating <i class="fas fa-star text-warning"></i></span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: @percentage%"></div>
+                                    </div>
+                                    <span class="text-muted small">@count</span>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Write Review Button -->
+                    @if (Model.IsAuthenticated)
+                    {
+                        @if (Model.CanReview)
+                        {
+                            if (!Model.HasUserReviewed)
+                            {
+                                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    <i class="fas fa-edit me-2"></i>Write a Review
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary mt-3" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    <i class="fas fa-edit me-2"></i>Update Your Review
+                                </button>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mt-3" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>You can only review this product after your order has been delivered.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <a href="/Auth/Login" class="btn btn-primary mt-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Write Review
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews List -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Customer Reviews
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProductReview.Reviews.Any())
+                    {
+                        foreach (var review in Model.ProductReview.Reviews)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold">@review.ReviewerName</div>
+                                        <div class="text-warning">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= review.Rating)
+                                                {
+                                                    <i class="fas fa-star"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star"></i>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                                <p class="mb-0">@review.Comment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-star text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">No reviews yet</h5>
+                            <p class="text-muted">Be the first to review this product!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+@if (Model.CanReview)
+{
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">
+                    <i class="fas fa-star me-2"></i>Write a Review
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="NewReview.ProductId" value="@Model.ProductReview.ProductId" />
+                    
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        <label class="form-label">Rating *</label>
+                        <div class="rating-input">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" asp-for="NewReview.Rating" value="@i" id="star@i" class="rating-radio" />
+                                <label for="star@i" class="rating-star">
+                                    <i class="far fa-star"></i>
+                                </label>
+                            }
+                        </div>
+                        <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+                    </div>
+
+                    <!-- Comment -->
+                    <div class="mb-3">
+                        <label asp-for="NewReview.Comment" class="form-label">Comment *</label>
+                        <textarea asp-for="NewReview.Comment" class="form-control" rows="4" 
+                                  placeholder="Share your experience with this product..."></textarea>
+                        <span asp-validation-for="NewReview.Comment" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+}
+
+@section Scripts {
+    <script>
+        // Star rating functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const ratingRadios = document.querySelectorAll('.rating-radio');
+            const ratingStars = document.querySelectorAll('.rating-star');
+
+            ratingRadios.forEach((radio, index) => {
+                radio.addEventListener('change', function() {
+                    const rating = this.value;
+                    
+                    ratingStars.forEach((star, starIndex) => {
+                        const icon = star.querySelector('i');
+                        if (starIndex < rating) {
+                            icon.className = 'fas fa-star';
+                        } else {
+                            icon.className = 'far fa-star';
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 5px;
+    }
+
+    .rating-radio {
+        display: none;
+    }
+
+    .rating-star {
+        cursor: pointer;
+        font-size: 1.5rem;
+        color: #ffc107;
+        transition: color 0.2s;
+    }
+
+    .rating-star:hover,
+    .rating-star:hover ~ .rating-star {
+        color: #ffc107;
+    }
+
+    .rating-radio:checked ~ .rating-star {
+        color: #ffc107;
+    }
+</style> 
