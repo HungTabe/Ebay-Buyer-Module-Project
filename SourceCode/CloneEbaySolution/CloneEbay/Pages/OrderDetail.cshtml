@@ -142,6 +142,18 @@
                         <a href="/Review/@Model.OrderDetail.Id" class="btn btn-primary">
                             <i class="fas fa-star"></i> Đánh giá sản phẩm
                         </a>
+                        @if (Model.CanReturnOrder)
+                        {
+                            <a href="/CreateReturnRequest?orderId=@Model.OrderDetail.Id" class="btn btn-warning">
+                                <i class="fas fa-undo"></i> Yêu cầu trả hàng
+                            </a>
+                        }
+                        else if (Model.HasReturnRequest)
+                        {
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-clock"></i> Đã yêu cầu trả hàng
+                            </button>
+                        }
                     }
                 </div>
             </div>

@@ -1,0 +1,186 @@
+@page "{orderId:int}"
+@model CloneEbay.Pages.OrderConfirmationModel
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if (Model.Order == null)
+            {
+                <div class="alert alert-danger">
+                    <h4 class="alert-heading">Order Not Found</h4>
+                    <p>The order you're looking for doesn't exist or you don't have permission to view it.</p>
+                    <hr>
+                    <a href="/OrderHistory" class="btn btn-primary">View Order History</a>
+                </div>
+            }
+            else
+            {
+                <!-- Success Header -->
+                <div class="text-center mb-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h1 class="text-success mb-3">Order Delivered!</h1>
+                    <p class="lead text-muted">Thank you for confirming receipt. Your order has been marked as <b>delivered</b>.</p>
+                    @if (Model.DeliveryConfirmed)
+                    {
+                        <div class="alert alert-success">
+                            <strong>Order #@Model.Order.Id</strong> has been successfully marked as delivered on @DateTime.Now.ToString("dddd, MMMM dd, yyyy 'at' HH:mm")
+                        </div>
+                    }
+                </div>
+
+                <!-- Order Details Card -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Order Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Order Information</h6>
+                                <p><strong>Order ID:</strong> #@Model.Order.Id</p>
+                                <p><strong>Order Date:</strong> @Model.Order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                                <p><strong>Status:</strong> <span class="badge bg-success">Delivered</span></p>
+                                <p><strong>Total Amount:</strong> <span class="h5 text-primary">$@Model.Order.TotalPrice.ToString("F2")</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Shipping Address</h6>
+                                <p><strong>@Model.Order.Address.FullName</strong></p>
+                                <p>@Model.Order.Address.Phone</p>
+                                <p>
+                                    @Model.Order.Address.Street<br />
+                                    @Model.Order.Address.City, @Model.Order.Address.State<br />
+                                    @Model.Order.Address.Country, @Model.Order.Address.PostalCode
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Items Ordered
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th class="text-center">Quantity</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Order.Items)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.ProductImage))
+                                                    {
+                                                        <img src="@item.ProductImage.Split(',').FirstOrDefault()" 
+                                                             alt="@item.ProductName" 
+                                                             class="me-3" 
+                                                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+                                                    }
+                                                    <div>
+                                                        <strong>@item.ProductName</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td class="text-end">$@item.UnitPrice.ToString("F2")</td>
+                                            <td class="text-end">$@(item.TotalPrice.ToString("F2"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td class="text-end"><strong>$@Model.Order.TotalPrice.ToString("F2")</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Our delivery process.
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-box text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <h6>Order Processing</h6>
+                                <small class="text-muted">We're preparing your order</small>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-shipping-fast text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <h6>Shipping</h6>
+                                <small class="text-muted">Your order will be shipped soon</small>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-truck text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <h6>Delivery</h6>
+                                <small class="text-muted">Track your package</small>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-home text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <h6>Enjoy!</h6>
+                                <small class="text-muted">Receive your items</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="/OrderHistory" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-history me-2"></i>
+                        View Order History
+                    </a>
+                    <a href="/Products" class="btn btn-success btn-lg">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Continue Shopping
+                    </a>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="mt-5">
+                    <div class="alert alert-light">
+                        <h6><i class="fas fa-envelope me-2"></i>Email Confirmation</h6>
+                        <p class="mb-2">A confirmation email has been sent to your registered email address with all the order details.</p>
+                        <small class="text-muted">If you don't receive the email within a few minutes, please check your spam folder.</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div> 

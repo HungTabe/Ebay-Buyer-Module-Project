@@ -1,0 +1,99 @@
+@page
+@model CloneEbay.Pages.ReturnRequestsModel
+@{
+    ViewData["Title"] = "Return Requests";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>My Return Requests</h2>
+                <a asp-page="/CreateReturnRequest" class="btn btn-primary">Create New Return Request</a>
+            </div>
+
+            @if (Model.ReturnRequests?.ReturnRequests?.Any() == true)
+            {
+                <div class="row">
+                    @foreach (var returnRequest in Model.ReturnRequests.ReturnRequests)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Return Request #@returnRequest.Id</h6>
+                                        <span class="badge @GetStatusBadgeClass(returnRequest.Status)">@returnRequest.Status</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Order:</strong> #@returnRequest.OrderId<br>
+                                        <strong>Reason:</strong> @returnRequest.Reason<br>
+                                        <strong>Created:</strong> @returnRequest.CreatedAt.ToString("MM/dd/yyyy HH:mm")
+                                    </div>
+                                    
+
+
+                                    @if (returnRequest.Order != null)
+                                    {
+                                        <div class="border-top pt-3">
+                                            <small class="text-muted">
+                                                <strong>Order Details:</strong><br>
+                                                Date: @returnRequest.Order.OrderDate.ToString("MM/dd/yyyy")<br>
+                                                Total: $@returnRequest.Order.TotalPrice.ToString("F2")<br>
+                                                Items: @returnRequest.Order.ItemCount
+                                            </small>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <a asp-page="/ReturnRequestDetail" asp-route-id="@returnRequest.Id" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.ReturnRequests.TotalPages > 1)
+                {
+                    <nav aria-label="Return requests pagination">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= Model.ReturnRequests.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.ReturnRequests.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-page="/ReturnRequests" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-box-open fa-3x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">No Return Requests</h4>
+                    <p class="text-muted">You haven't submitted any return requests yet.</p>
+                    <a asp-page="/CreateReturnRequest" class="btn btn-primary">Create Your First Return Request</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "approved" => "bg-success",
+            "rejected" => "bg-danger",
+            "processing" => "bg-info",
+            "completed" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+} 

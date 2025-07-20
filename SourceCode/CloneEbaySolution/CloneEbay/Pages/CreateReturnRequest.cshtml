@@ -1,0 +1,65 @@
+@page
+@model CloneEbay.Pages.CreateReturnRequestPageModel
+@{
+    ViewData["Title"] = "Create Return Request";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Create Return Request</h3>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @Model.SuccessMessage
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label asp-for="ReturnRequest.OrderId" class="form-label">Select Order</label>
+                            <select asp-for="ReturnRequest.OrderId" class="form-select" required>
+                                <option value="">-- Select an order --</option>
+                                @foreach (var order in Model.AvailableOrders)
+                                {
+                                    <option value="@order.Id">
+                                        Order #@order.Id - @order.OrderDate.ToString("MM/dd/yyyy") - $@order.TotalPrice.ToString("F2")
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="ReturnRequest.OrderId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ReturnRequest.Reason" class="form-label">Reason for Return</label>
+                            <textarea asp-for="ReturnRequest.Reason" class="form-control" rows="4" 
+                                      placeholder="Please describe the reason for your return request in detail..." required></textarea>
+                            <span asp-validation-for="ReturnRequest.Reason" class="text-danger"></span>
+                        </div>
+
+
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Submit Return Request</button>
+                            <a asp-page="/OrderHistory" class="btn btn-secondary">Back to Order History</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

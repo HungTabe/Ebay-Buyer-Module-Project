@@ -17,7 +17,6 @@ namespace CloneEbay.Pages
         }
 
         public OrderTable? Order { get; set; }
-        public string? Message { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int orderId)
         {
@@ -38,9 +37,9 @@ namespace CloneEbay.Pages
                 return RedirectToPage("/Error");
             order.Status = "Paid";
             await _db.SaveChangesAsync();
-            Message = "Thanh toán thành công! Cảm ơn bạn đã mua hàng.";
-            Order = order;
-            return Page();
+            
+            // Redirect to order confirmation page
+            return RedirectToPage("/OrderConfirmation", new { orderId = order.Id });
         }
     }
 } 
