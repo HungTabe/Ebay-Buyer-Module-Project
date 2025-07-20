@@ -40,20 +40,38 @@
                             Products
                         </a>
                     </li>
-                    <li class="nav-item mx-1">
-                        <a class="nav-link" asp-area="" asp-page="/Profile">
-                            <i class='fa fa-user'></i>
-                            Profile
-                        </a>
-                    </li>
-                    <li class="nav-item mx-1">
-                        <a class="nav-link" asp-area="" asp-page="/Auth/Login">
-                            <i class='fas fa-sign-in-alt'></i>
-                            Sign in
-                        </a>
-                    </li>
-                    <li class="nav-item mx-1"><a class="nav-link" asp-area="" asp-page="/Auth/Register"><i class="fa fa-user-plus"></i> Register</a></li>
-                    <li class="nav-item mx-1"><a class="nav-link position-relative" href="#"><i class="fa fa-shopping-cart"></i> Cart <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span></a></li>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item mx-1">
+                            <a class="nav-link" asp-area="" asp-page="/Profile">
+                                <i class='fa fa-user'></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link" asp-area="" asp-page="/OrderHistory">
+                                <i class='fa fa-history'></i>
+                                Orders
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link" asp-area="" asp-page="/Auth/Logout">
+                                <i class='fas fa-sign-out-alt'></i>
+                                Logout
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item mx-1">
+                            <a class="nav-link" asp-area="" asp-page="/Auth/Login">
+                                <i class='fas fa-sign-in-alt'></i>
+                                Sign in
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1"><a class="nav-link" asp-area="" asp-page="/Auth/Register"><i class="fa fa-user-plus"></i> Register</a></li>
+                    }
+                    <li class="nav-item mx-1"><a class="nav-link position-relative" asp-area="" asp-page="/Cart"><i class="fa fa-shopping-cart"></i> Cart <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span></a></li>
                 </ul>
             </div>
         </nav>
