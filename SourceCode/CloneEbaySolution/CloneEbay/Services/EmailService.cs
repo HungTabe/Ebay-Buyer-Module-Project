@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CloneEbay.Services
 {
-    public class EmailService : IEmailService
+    public partial class EmailService : IEmailService
     {
         private readonly EmailSettings _emailSettings;
 
@@ -43,4 +43,4 @@ namespace CloneEbay.Services
             }
         }
     }
-} 
+}

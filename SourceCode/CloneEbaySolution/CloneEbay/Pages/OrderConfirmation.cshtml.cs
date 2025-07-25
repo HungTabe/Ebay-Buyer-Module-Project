@@ -19,6 +19,9 @@ namespace CloneEbay.Pages
         public bool DeliveryConfirmed { get; set; }
         public string? CouponCode { get; set; }
         public decimal? CouponDiscountPercent { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal ShippingFee { get; set; }
+        public decimal CouponDiscount { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int orderId)
         {
@@ -27,7 +30,7 @@ namespace CloneEbay.Pages
                 return RedirectToPage("/Auth/Login");
 
             // Confirm delivery
-            DeliveryConfirmed = await _orderService.ConfirmOrderDeliveredAsync(orderId, userId.Value);
+            //DeliveryConfirmed = await _orderService.ConfirmOrderDeliveredAsync(orderId, userId.Value);
 
             // Get order details for display
             Order = await _orderService.GetOrderDetailAsync(orderId, userId.Value);
@@ -41,6 +44,18 @@ namespace CloneEbay.Pages
                 {
                     CouponCode = orderWithCoupon.Coupon.Code;
                     CouponDiscountPercent = orderWithCoupon.Coupon.DiscountPercent;
+                }
+
+                // Tính Subtotal
+                Subtotal = Order.Items.Sum(i => i.TotalPrice);
+                // Tính ShippingFee
+                var region = Order.Address != null ? Order.Address.GetRegion() : "Unknown";
+                ShippingFee = CloneEbay.Services.ShippingFeeCalculator.Calculate(region);
+                // Tính CouponDiscount
+                CouponDiscount = 0;
+                if (CouponDiscountPercent > 0)
+                {
+                    CouponDiscount = Subtotal * (CouponDiscountPercent.Value / 100);
                 }
             }
 

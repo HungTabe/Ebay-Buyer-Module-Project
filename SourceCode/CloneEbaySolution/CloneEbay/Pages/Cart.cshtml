@@ -35,7 +35,7 @@ else
                             <form method="post">
                                 <input type="hidden" name="UpdateProductId" value="@item.ProductId" />
                                 <input type="number" name="UpdateQuantity" value="@item.Quantity" min="1" class="form-control d-inline-block" style="width:80px" />
-                                <button type="submit" asp-page-handler="UpdateQuantity" class="btn btn-sm btn-outline-primary ms-2">Update</button>
+                                @* <button type="submit" asp-page-handler="UpdateQuantity" class="btn btn-sm btn-outline-primary ms-2">Update</button> *@
                             </form>
                         </td>
                         <td>$@(item.Price * item.Quantity)</td>

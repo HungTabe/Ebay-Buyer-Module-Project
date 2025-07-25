@@ -57,8 +57,8 @@
             <div class="mb-2"><input asp-for="NewAddress.Country" class="form-control" placeholder="Country" /></div>
             <div class="mb-2"><input asp-for="NewAddress.PostalCode" class="form-control" placeholder="Postal Code" /></div>
             <div class="form-check mb-2">
-                <input asp-for="NewAddress.IsDefault" class="form-check-input" />
-                <label class="form-check-label" asp-for="NewAddress.IsDefault">Set as default</label>
+                <input type="checkbox" name="NewAddress.IsDefault" id="NewAddress_IsDefault" class="form-check-input" value="true" @(Model.NewAddress.IsDefault == true ? "checked" : "") />
+                <label class="form-check-label" for="NewAddress_IsDefault">Set as default</label>
             </div>
             <button type="submit" asp-page-handler="AddAddress" class="btn btn-outline-primary">Save New Address</button>
         </div>

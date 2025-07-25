@@ -40,8 +40,11 @@ namespace CloneEbay.Pages
                 CouponDiscountPercent = orderWithCoupon.Coupon.DiscountPercent;
             }
 
-            // Check if order can be returned
-            if (OrderDetail.Status?.ToLower() == "delivered")
+            // Check if order can be returned (delivered or paid+shipment delivered)
+            var status = OrderDetail.Status?.ToLower();
+            var shippingStatus = OrderDetail.ShippingInfo?.Status?.ToLower();
+            var canReviewOrReturn = status == "delivered" || (status == "paid" && shippingStatus == "delivered");
+            if (canReviewOrReturn)
             {
                 CanReturnOrder = await _orderService.CanReturnOrderAsync(id, userId.Value);
                 HasReturnRequest = !CanReturnOrder && await _orderService.GetReturnRequestsAsync(userId.Value, 1, 100)

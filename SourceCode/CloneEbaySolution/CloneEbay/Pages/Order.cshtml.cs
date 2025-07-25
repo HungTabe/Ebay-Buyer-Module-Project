@@ -16,12 +16,14 @@ namespace CloneEbay.Pages
         private readonly IAddressService _addressService;
         private readonly CartService _cartService;
         private readonly IOrderService _orderService;
+        private readonly IShippingProvider _shippingProvider;
 
-        public OrderModel(IAddressService addressService, CartService cartService, IOrderService orderService)
+        public OrderModel(IAddressService addressService, CartService cartService, IOrderService orderService, IShippingProvider shippingProvider)
         {
             _addressService = addressService;
             _cartService = cartService;
             _orderService = orderService;
+            _shippingProvider = shippingProvider;
         }
 
         public List<CartItem> CartItems { get; set; } = new();
@@ -70,7 +72,21 @@ namespace CloneEbay.Pages
             var userId = GetUserId();
             if (userId == null)
                 return RedirectToPage("/Auth/Login");
-            
+
+            // Nếu địa chỉ mới là default, set các địa chỉ khác về not default
+            if (NewAddress.IsDefault == true)
+            {
+                var allAddresses = await _addressService.GetUserAddressesAsync(userId.Value);
+                foreach (var addr in allAddresses)
+                {
+                    if (addr.IsDefault == true)
+                    {
+                        addr.IsDefault = false;
+                        await _addressService.UpdateAddressAsync(addr); // cần có hàm update
+                    }
+                }
+            }
+
             NewAddress.UserId = userId.Value;
             var success = await _addressService.AddAddressAsync(NewAddress);
             
@@ -117,7 +133,31 @@ namespace CloneEbay.Pages
             {
                 await _orderService.UpdateCouponUsageAsync(order.CouponId.Value);
             }
-            
+
+            // --- TÍNH PHÍ GIAO HÀNG & TẠO VẬN ĐƠN ---
+            string region = address.GetRegion();
+            decimal shippingFee = CloneEbay.Services.ShippingFeeCalculator.Calculate(region);
+            var shippingRequest = new CloneEbay.Models.ShippingRequestModel
+            {
+                OrderId = order.Id.ToString(),
+                Address = address.GetFullAddress(),
+                UserId = userId.Value.ToString(),
+                Region = region
+            };
+            var shippingResult = await _shippingProvider.CreateShipmentAsync(shippingRequest);
+            if (shippingResult.Success)
+            {
+                // Cập nhật trạng thái shipment (giả lập)
+                await _shippingProvider.UpdateShipmentStatusAsync(shippingResult.ShipmentCode, "Created");
+                // Có thể lưu shipmentCode vào TempData nếu muốn dùng ở Payment
+                TempData["ShipmentCode"] = shippingResult.ShipmentCode;
+            }
+            else
+            {
+                // Xử lý lỗi tạo vận đơn nếu cần
+                TempData["ShipmentError"] = shippingResult.Message;
+            }
+
             _cartService.ClearCart();
             return RedirectToPage("/Payment", new { orderId = order.Id });
         }

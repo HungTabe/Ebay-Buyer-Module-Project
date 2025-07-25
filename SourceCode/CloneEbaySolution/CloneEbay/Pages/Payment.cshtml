@@ -28,6 +28,9 @@
             {
                 <div class="alert alert-danger">@Model.ErrorMessage</div>
             }
+            <div class="mb-3">
+                <div id="countdown-timer" class="alert alert-warning" style="font-size:1.2rem;"></div>
+            </div>
             @if (Model.Order == null)
             {
                 <div class="alert alert-danger">Order not found.</div>
@@ -64,21 +67,30 @@
                                                 <td>@item.Product?.Title</td>
                                                 <td>@item.Quantity</td>
                                                 <td>$@item.UnitPrice?.ToString("F2")</td>
-                                                <td>$@((item.UnitPrice ?? 0) * (item.Quantity ?? 0)).ToString("F2")</td>
+                                                <td>$@((item.UnitPrice ?? 0) * (item.Quantity ?? 0))</td>
                                             </tr>
                                         }
                                     </tbody>
                                 </table>
                                 <div class="text-end mt-2">
-                                    @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
-                                    {
-                                        <div><span class="badge bg-success">Coupon: @Model.CouponCode (@Model.CouponDiscountPercent% off)</span></div>
-                                        <div><b>Discounted Total: $@(Model.Order.TotalPrice?.ToString("F2"))</b></div>
-                                    }
-                                    else
-                                    {
-                                        <b>Total: $@Model.Order.TotalPrice?.ToString("F2")</b>
-                                    }
+                                    <table class="table table-borderless w-auto float-end mb-0">
+                                        <tr>
+                                            <td class="text-end">Subtotal:</td>
+                                            <td class="text-end">$@Model.Subtotal?.ToString("F2")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-end">Shipping Fee:</td>
+                                            <td class="text-end">$@Model.ShippingFee?.ToString("F2")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-end">Discount:</td>
+                                            <td class="text-end">- $@Model.Discount?.ToString("F2")</td>
+                                        </tr>
+                                        <tr class="fw-bold border-top">
+                                            <td class="text-end">Total:</td>
+                                            <td class="text-end text-primary">$@Model.OrderTotal?.ToString("F2")</td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -90,23 +102,31 @@
                                 <b><i class="fas fa-credit-card me-2"></i>Payment</b>
                             </div>
                             <div class="card-body">
-                                <form id="payment-form" method="post" asp-page-handler="Pay">
-                                    <input type="hidden" name="orderId" value="@Model.Order.Id" />
-                                    <input type="hidden" id="stripeToken" name="stripeToken" />
-                                    <div class="mb-3">
-                                        <label for="card-element" class="form-label"><i class="fas fa-credit-card me-1"></i>Card Details</label>
-                                        <div id="card-element" class="form-control p-2"></div>
+                                @if (Model.SecondsLeft > 0)
+                                {
+                                    <!-- Hiển thị form thanh toán như cũ -->
+                                    <form id="payment-form" method="post" asp-page-handler="Pay">
+                                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                                        <input type="hidden" id="stripeToken" name="stripeToken" />
+                                        <div class="mb-3">
+                                            <label for="card-element" class="form-label"><i class="fas fa-credit-card me-1"></i>Card Details</label>
+                                            <div id="card-element" class="form-control p-2"></div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" @(Model.ErrorMessage != null ? "disabled" : null)>
+                                            <i class="fas fa-lock me-2"></i>Pay $@Model.OrderTotal?.ToString("F2")
+                                        </button>
+                                        <div id="payment-spinner" class="text-center mt-2" style="display:none;">
+                                            <i class="fas fa-spinner fa-spin"></i> Processing payment...
+                                        </div>
+                                    </form>
+                                    <div class="alert alert-info mt-3 mb-0">
+                                        <i class="fas fa-info-circle me-1"></i> All transactions are secure and encrypted.
                                     </div>
-                                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
-                                        <i class="fas fa-lock me-2"></i>Pay $@Model.Order.TotalPrice?.ToString("F2")
-                                    </button>
-                                    <div id="payment-spinner" class="text-center mt-2" style="display:none;">
-                                        <i class="fas fa-spinner fa-spin"></i> Processing payment...
-                                    </div>
-                                </form>
-                                <div class="alert alert-info mt-3 mb-0">
-                                    <i class="fas fa-info-circle me-1"></i> All transactions are secure and encrypted.
-                                </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-danger">Order has been cancelled due to payment timeout.</div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -138,5 +158,21 @@
             document.getElementById('stripeToken').value = token.id;
             form.submit();
         });
+
+        // Countdown timer
+        let seconds = @Model.SecondsLeft;
+        const timerDiv = document.getElementById('countdown-timer');
+        function updateTimer() {
+            if (timerDiv) {
+                timerDiv.textContent = 'Time left to pay: ' + seconds + 's';
+            }
+            if (seconds <= 0) {
+                location.reload();
+            } else {
+                seconds--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+        updateTimer();
     </script>
 }
