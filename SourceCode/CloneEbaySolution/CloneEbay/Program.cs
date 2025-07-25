@@ -24,8 +24,15 @@ builder.Services.AddScoped<IProductService, ProductService>();
 // Add OrderService
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+// Add AddressService
+builder.Services.AddScoped<IAddressService, AddressService>();
+
 // Add CartService
 builder.Services.AddScoped<CartService>();
+
+// Register PaymentService and EmailService
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add Session and IHttpContextAccessor
 builder.Services.AddSession();

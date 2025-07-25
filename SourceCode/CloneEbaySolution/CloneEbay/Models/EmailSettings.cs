@@ -8,4 +8,7 @@ public class EmailSettings
     public string SmtpPassword { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;
+    public string? SenderEmail { get; internal set; }
+    public string? SenderName { get; internal set; }
+    public string? SmtpHost { get; internal set; }
 } 

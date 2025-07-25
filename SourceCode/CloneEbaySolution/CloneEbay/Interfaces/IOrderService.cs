@@ -26,5 +26,15 @@ namespace CloneEbay.Interfaces
         /// Gets order with coupon information for display purposes.
         /// </summary>
         Task<OrderTable?> GetOrderWithCouponAsync(int orderId, int userId);
+        
+        /// <summary>
+        /// Creates a new order with items from cart and applies coupon if provided.
+        /// </summary>
+        Task<OrderTable?> CreateOrderAsync(int userId, int addressId, string couponCode, List<CartItem> cartItems);
+        
+        /// <summary>
+        /// Updates coupon usage count after order is created.
+        /// </summary>
+        Task<bool> UpdateCouponUsageAsync(int couponId);
     }
 } 
