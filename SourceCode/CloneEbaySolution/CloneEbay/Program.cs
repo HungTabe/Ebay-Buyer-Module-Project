@@ -21,6 +21,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Add ProductService
 builder.Services.AddScoped<IProductService, ProductService>();
 
+// Add OrderService
+builder.Services.AddScoped<IOrderService, OrderService>();
+
 // Add CartService
 builder.Services.AddScoped<CartService>();
 
