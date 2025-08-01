@@ -1,16 +1,19 @@
 @page "{id:int}"
 @model CloneEbay.Pages.OrderDetailModel
 @{
-    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderDetail?.Id;
+    ViewData["Title"] = "Order Details #" + Model.OrderDetail?.Id;
+    var canReviewOrReturn = Model.OrderDetail.Status?.ToLower() == "delivered"
+        || (Model.OrderDetail.Status?.ToLower() == "paid"
+            && Model.OrderDetail.ShippingInfo?.Status == "Delivered");
 }
 
 <div class="container mt-4">
     @if (Model.OrderDetail == null)
     {
         <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i> Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn hàng này.
+            <i class="fas fa-exclamation-triangle"></i> Order not found or you do not have permission to view this order.
         </div>
-        <a href="/OrderHistory" class="btn btn-primary">Quay lại lịch sử đơn hàng</a>
+        <a href="/OrderHistory" class="btn btn-primary">Back to order history</a>
     }
     else
     {
@@ -19,22 +22,22 @@
                 <!-- Order Information -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Đơn hàng #@Model.OrderDetail.Id</h5>
+                        <h5 class="mb-0">Order #@Model.OrderDetail.Id</h5>
                         <span class="badge @GetStatusBadgeClass(Model.OrderDetail.Status) fs-6">@GetStatusDisplayName(Model.OrderDetail.Status)</span>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Ngày đặt:</strong> @Model.OrderDetail.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
-                                <p><strong>Tổng tiền:</strong> $@Model.OrderDetail.TotalPrice.ToString("F2")</p>
+                                <p><strong>Order Date:</strong> @Model.OrderDetail.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                                <p><strong>Total:</strong> $@Model.OrderDetail.TotalPrice.ToString("F2")</p>
                                 @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
                                 {
-                                    <p><strong>Mã giảm giá:</strong> <span class="text-success">@Model.CouponCode (@Model.CouponDiscountPercent% off)</span></p>
+                                    <p><strong>Coupon:</strong> <span class="text-success">@Model.CouponCode (@Model.CouponDiscountPercent% off)</span></p>
                                 }
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Số sản phẩm:</strong> @Model.OrderDetail.Items.Count</p>
-                                <p><strong>Trạng thái:</strong> @GetStatusDisplayName(Model.OrderDetail.Status)</p>
+                                <p><strong>Items:</strong> @Model.OrderDetail.Items.Count</p>
+                                <p><strong>Status:</strong> @GetStatusDisplayName(Model.OrderDetail.Status)</p>
                             </div>
                         </div>
                     </div>
@@ -43,7 +46,7 @@
                 <!-- Order Items -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Sản phẩm đã đặt</h5>
+                        <h5 class="mb-0">Ordered Products</h5>
                     </div>
                     <div class="card-body">
                         @foreach (var item in Model.OrderDetail.Items)
@@ -63,10 +66,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <h6 class="mb-1">@item.ProductName</h6>
-                                    <small class="text-muted">Số lượng: @item.Quantity</small>
+                                    <small class="text-muted">Quantity: @item.Quantity</small>
                                 </div>
                                 <div class="col-md-2 text-end">
-                                    <small class="text-muted">Đơn giá</small><br />
+                                    <small class="text-muted">Unit Price</small><br />
                                     $@item.UnitPrice.ToString("F2")
                                 </div>
                                 <div class="col-md-2 text-end">
@@ -86,7 +89,7 @@
                 <!-- Shipping Address -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Địa chỉ giao hàng</h5>
+                        <h5 class="mb-0">Shipping Address</h5>
                     </div>
                     <div class="card-body">
                         <p class="mb-1"><strong>@Model.OrderDetail.Address.FullName</strong></p>
@@ -102,13 +105,13 @@
                 {
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5 class="mb-0">Thông tin thanh toán</h5>
+                            <h5 class="mb-0">Payment Information</h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-1"><strong>Phương thức:</strong> @Model.OrderDetail.Payment.PaymentMethod</p>
-                            <p class="mb-1"><strong>Số tiền:</strong> $@Model.OrderDetail.Payment.Amount.ToString("F2")</p>
-                            <p class="mb-1"><strong>Trạng thái:</strong> @Model.OrderDetail.Payment.Status</p>
-                            <p class="mb-0"><strong>Ngày thanh toán:</strong> @Model.OrderDetail.Payment.PaymentDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p class="mb-1"><strong>Method:</strong> @Model.OrderDetail.Payment.PaymentMethod</p>
+                            <p class="mb-1"><strong>Amount:</strong> $@Model.OrderDetail.Payment.Amount.ToString("F2")</p>
+                            <p class="mb-1"><strong>Status:</strong> @Model.OrderDetail.Payment.Status</p>
+                            <p class="mb-0"><strong>Payment Date:</strong> @Model.OrderDetail.Payment.PaymentDate.ToString("dd/MM/yyyy HH:mm")</p>
                         </div>
                     </div>
                 }
@@ -118,19 +121,19 @@
                 {
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h5 class="mb-0">Thông tin vận chuyển</h5>
+                            <h5 class="mb-0">Shipping Information</h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-1"><strong>Đơn vị vận chuyển:</strong> @Model.OrderDetail.ShippingInfo.Carrier</p>
-                            <p class="mb-1"><strong>Mã theo dõi:</strong> @Model.OrderDetail.ShippingInfo.TrackingNumber</p>
-                            <p class="mb-1"><strong>Trạng thái:</strong> @Model.OrderDetail.ShippingInfo.Status</p>
+                            <p class="mb-1"><strong>Carrier:</strong> @Model.OrderDetail.ShippingInfo.Carrier</p>
+                            <p class="mb-1"><strong>Tracking Number:</strong> @Model.OrderDetail.ShippingInfo.TrackingNumber</p>
+                            <p class="mb-1"><strong>Status:</strong> @Model.OrderDetail.ShippingInfo.Status</p>
                             @if (Model.OrderDetail.ShippingInfo.ShippedDate.HasValue)
                             {
-                                <p class="mb-1"><strong>Ngày gửi:</strong> @Model.OrderDetail.ShippingInfo.ShippedDate.Value.ToString("dd/MM/yyyy")</p>
+                                <p class="mb-1"><strong>Shipped Date:</strong> @Model.OrderDetail.ShippingInfo.ShippedDate.Value.ToString("dd/MM/yyyy")</p>
                             }
                             @if (Model.OrderDetail.ShippingInfo.EstimatedDelivery.HasValue)
                             {
-                                <p class="mb-0"><strong>Dự kiến giao:</strong> @Model.OrderDetail.ShippingInfo.EstimatedDelivery.Value.ToString("dd/MM/yyyy")</p>
+                                <p class="mb-0"><strong>Estimated Delivery:</strong> @Model.OrderDetail.ShippingInfo.EstimatedDelivery.Value.ToString("dd/MM/yyyy")</p>
                             }
                         </div>
                     </div>
@@ -139,23 +142,27 @@
                 <!-- Action Buttons -->
                 <div class="d-grid gap-2">
                     <a href="/OrderHistory" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Quay lại lịch sử
+                        <i class="fas fa-arrow-left"></i> Back to history
                     </a>
-                    @if (Model.OrderDetail.Status?.ToLower() == "delivered")
+                    @if (canReviewOrReturn)
                     {
-                        <a href="/Review/@Model.OrderDetail.Id" class="btn btn-primary">
-                            <i class="fas fa-star"></i> Đánh giá sản phẩm
-                        </a>
+                        var firstProductId = Model.OrderDetail.Items.FirstOrDefault()?.ProductId;
+                        if (firstProductId != null)
+                        {
+                            <a href="/ProductReviews/@firstProductId" class="btn btn-primary">
+                                <i class="fas fa-star"></i> Review product
+                            </a>
+                        }
                         @if (Model.CanReturnOrder)
                         {
                             <a href="/CreateReturnRequest?orderId=@Model.OrderDetail.Id" class="btn btn-warning">
-                                <i class="fas fa-undo"></i> Yêu cầu trả hàng
+                                <i class="fas fa-undo"></i> Request return
                             </a>
                         }
                         else if (Model.HasReturnRequest)
                         {
                             <button class="btn btn-secondary" disabled>
-                                <i class="fas fa-clock"></i> Đã yêu cầu trả hàng
+                                <i class="fas fa-clock"></i> Return requested
                             </button>
                         }
                     }
@@ -184,13 +191,13 @@
     {
         return status?.ToLower() switch
         {
-            "pending" => "Chờ xử lý",
-            "processing" => "Đang xử lý",
-            "shipped" => "Đã gửi hàng",
-            "delivered" => "Đã giao hàng",
-            "cancelled" => "Đã hủy",
-            "returned" => "Đã trả hàng",
-            _ => status ?? "Không xác định"
+            "pending" => "Pending",
+            "processing" => "Processing",
+            "shipped" => "Shipped",
+            "delivered" => "Delivered",
+            "cancelled" => "Cancelled",
+            "returned" => "Returned",
+            _ => status ?? "Unknown"
         };
     }
 } 

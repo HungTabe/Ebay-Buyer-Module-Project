@@ -1,99 +1,114 @@
 @page
 @model CloneEbay.Pages.OrderModel
 @{
-    ViewData["Title"] = "Đặt hàng";
+    ViewData["Title"] = "Place Order";
 }
 
-<h2 class="mt-4 mb-4">Đặt hàng</h2>
+<h2 class="mt-4 mb-4">Place Order</h2>
 
+<form method="post">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach (var modelState in ViewData.ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+    
 <div class="row">
     <div class="col-md-6">
-        <h4>Địa chỉ giao hàng</h4>
-        <form method="post">
-            @if (Model.Addresses.Count > 0)
-            {
-                <div class="mb-3">
-                    @foreach (var addr in Model.Addresses)
-                    {
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="SelectedAddressId" value="@addr.Id" id="addr_@addr.Id" @(Model.SelectedAddressId == addr.Id ? "checked" : "") />
-                            <label class="form-check-label" for="addr_@addr.Id">
-                                <b>@addr.FullName</b> - @addr.Phone<br />
-                                @addr.Street, @addr.City, @addr.State, @addr.Country, @addr.PostalCode
-                                @if (addr.IsDefault == true) { <span class="badge bg-success ms-2">Mặc định</span> }
-                            </label>
-                        </div>
-                    }
-                </div>
-            }
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="AddNewAddress" id="addNewAddress" value="true" onchange="document.getElementById('newAddressForm').style.display = this.checked ? 'block' : 'none';" />
-                <label class="form-check-label" for="addNewAddress">Thêm địa chỉ mới</label>
+        <h4>Shipping Address</h4>
+        @if (Model.Addresses.Count > 0)
+        {
+            <div class="mb-3">
+                @foreach (var addr in Model.Addresses)
+                {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="SelectedAddressId" value="@addr.Id" id="addr_@addr.Id" @(Model.SelectedAddressId == addr.Id ? "checked" : "") />
+                        <label class="form-check-label" for="addr_@addr.Id">
+                            <b>@addr.FullName</b> - @addr.Phone<br />
+                            @addr.Street, @addr.City, @addr.State, @addr.Country, @addr.PostalCode
+                            @if (addr.IsDefault == true)
+                            {
+                                <span class="badge bg-success ms-2">Default</span>
+                            }
+                        </label>
+                    </div>
+                }
             </div>
-            <div id="newAddressForm" style="display:none;">
-                <div class="mb-2"><input asp-for="NewAddress.FullName" class="form-control" placeholder="Họ tên" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.Phone" class="form-control" placeholder="Số điện thoại" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.Street" class="form-control" placeholder="Địa chỉ" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.City" class="form-control" placeholder="Thành phố" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.State" class="form-control" placeholder="Tỉnh/Bang" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.Country" class="form-control" placeholder="Quốc gia" /></div>
-                <div class="mb-2"><input asp-for="NewAddress.PostalCode" class="form-control" placeholder="Mã bưu điện" /></div>
-                <div class="form-check mb-2">
-                    <input asp-for="NewAddress.IsDefault" class="form-check-input" />
-                    <label class="form-check-label" asp-for="NewAddress.IsDefault">Đặt làm mặc định</label>
-                </div>
-                <button type="submit" asp-page-handler="AddAddress" class="btn btn-outline-primary">Lưu địa chỉ mới</button>
+        }
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="AddNewAddress" id="addNewAddress" value="true" onchange="document.getElementById('newAddressForm').style.display = this.checked ? 'block' : 'none';" />
+            <label class="form-check-label" for="addNewAddress">Add new address</label>
+        </div>
+        <div id="newAddressForm" style="display:none;">
+            <div class="mb-2"><input asp-for="NewAddress.FullName" class="form-control" placeholder="Full Name" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.Phone" class="form-control" placeholder="Phone Number" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.Street" class="form-control" placeholder="Street Address" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.City" class="form-control" placeholder="City" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.State" class="form-control" placeholder="State/Province" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.Country" class="form-control" placeholder="Country" /></div>
+            <div class="mb-2"><input asp-for="NewAddress.PostalCode" class="form-control" placeholder="Postal Code" /></div>
+            <div class="form-check mb-2">
+                <input type="checkbox" name="NewAddress.IsDefault" id="NewAddress_IsDefault" class="form-check-input" value="true" @(Model.NewAddress.IsDefault == true ? "checked" : "") />
+                <label class="form-check-label" for="NewAddress_IsDefault">Set as default</label>
             </div>
-            @* <button type="submit" asp-page-handler="PlaceOrder" class="btn btn-success mt-3">Xác nhận đặt hàng</button> *@
-        </form>
+            <button type="submit" asp-page-handler="AddAddress" class="btn btn-outline-primary">Save New Address</button>
+        </div>
     </div>
     <div class="col-md-6">
-        <h4>Giỏ hàng</h4>
-        <form method="post">
-            <div class="mb-3">
-                <label for="CouponCode" class="form-label">Mã giảm giá (Coupon)</label>
-                <input type="text" name="CouponCode" id="CouponCode" class="form-control" value="@Model.CouponCode" />
-                @if (!string.IsNullOrEmpty(Model.CouponError))
+        <h4>Shopping Cart</h4>
+        <div class="mb-3">
+            <label for="CouponCode" class="form-label">Coupon Code</label>
+            <input type="text" name="CouponCode" id="CouponCode" class="form-control" value="@Model.CouponCode" />
+            @if (!string.IsNullOrEmpty(Model.CouponError))
+            {
+                <div class="text-danger">@Model.CouponError</div>
+            }
+            @if (Model.CouponDiscountPercent > 0)
+            {
+                <div class="text-success">Coupon applied: @Model.CouponDiscountPercent% off</div>
+            }
+        </div>
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.CartItems)
                 {
-                    <div class="text-danger">@Model.CouponError</div>
-                }
-                @if (Model.CouponDiscountPercent > 0)
-                {
-                    <div class="text-success">Áp dụng mã giảm giá: @Model.CouponDiscountPercent% off</div>
-                }
-            </div>
-            <table class="table table-bordered align-middle">
-                <thead>
                     <tr>
-                        <th>Ảnh</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Đơn giá</th>
-                        <th>Số lượng</th>
-                        <th>Thành tiền</th>
+                        <td style="width:80px"><img src="@item.ImageUrl" alt="@item.ProductName" style="width:60px;height:60px;object-fit:cover" /></td>
+                        <td>@item.ProductName</td>
+                        <td>$@item.Price.ToString("F2")</td>
+                        <td>@item.Quantity</td>
+                        <td>$@(item.Price * item.Quantity)</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.CartItems)
-                    {
-                        <tr>
-                            <td style="width:80px"><img src="@item.ImageUrl" alt="@item.ProductName" style="width:60px;height:60px;object-fit:cover" /></td>
-                            <td>@item.ProductName</td>
-                            <td>$@item.Price.ToString("F2")</td>
-                            <td>@item.Quantity</td>
-                            <td>$@(item.Price * item.Quantity)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <div class="text-end">
-                <b>Tổng cộng: $@Model.TotalPrice.ToString("F2")</b>
-                @if (Model.CouponDiscountPercent > 0)
-                {
-                    <div><b>Giảm giá: -@Model.CouponDiscountPercent% </b></div>
-                    <div><b>Thành tiền sau giảm: $@Model.DiscountedTotal.ToString("F2")</b></div>
                 }
-            </div>
-            <button type="submit" asp-page-handler="PlaceOrder" class="btn btn-success mt-3">Xác nhận đặt hàng</button>
-        </form>
+            </tbody>
+        </table>
+        <div class="text-end">
+            <b>Total: $@Model.TotalPrice.ToString("F2")</b>
+            @if (Model.CouponDiscountPercent > 0)
+            {
+                <div><b>Discount: -@Model.CouponDiscountPercent%</b></div>
+                <div><b>Final Total: $@Model.DiscountedTotal.ToString("F2")</b></div>
+            }
+        </div>
+        <button type="submit" asp-page-handler="PlaceOrder" class="btn btn-success mt-3">Confirm Order</button>
     </div>
-</div> 
+</div>
+</form>

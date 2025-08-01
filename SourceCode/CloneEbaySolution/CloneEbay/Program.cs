@@ -24,12 +24,33 @@ builder.Services.AddScoped<IProductService, ProductService>();
 // Add OrderService
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+// Add AddressService
+builder.Services.AddScoped<IAddressService, AddressService>();
+
 // Add CartService
 builder.Services.AddScoped<CartService>();
+
+// Register PaymentService and EmailService
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Register plug-in payment and shipping providers
+builder.Services.AddSingleton<IPaymentProvider, PayPalPaymentProvider>(sp => new PayPalPaymentProvider());
+builder.Services.AddSingleton<IPaymentProvider>(sp => new CodPaymentProvider());
+builder.Services.AddSingleton<IShippingProvider, ShippingProvider>(sp => new ShippingProvider());
+
+// Register OrderProcessingService
+builder.Services.AddScoped<OrderProcessingService>();
 
 // Add Session and IHttpContextAccessor
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
+
+// Add IShippingInfoService
+builder.Services.AddScoped<IShippingInfoService, ShippingInfoService>();
+
+// Add IOrderTimeoutService
+builder.Services.AddScoped<IOrderTimeoutService, OrderTimeoutService>();
 
 
 // JWT Configuration

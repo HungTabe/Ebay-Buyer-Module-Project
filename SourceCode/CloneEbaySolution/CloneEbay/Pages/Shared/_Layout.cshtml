@@ -25,9 +25,7 @@
                 </form>
                 <ul class="navbar-nav mb-2 mb-lg-0 align-items-center">
                     <li class="nav-item mx-1"><a class="nav-link" href="#">Daily Deals</a></li>
-                    <li class="nav-item mx-1"><a class="nav-link" href="#">Brand Outlet</a></li>
                     <li class="nav-item mx-1"><a class="nav-link" href="#">Help & Contact</a></li>
-                    <li class="nav-item mx-1"><a class="nav-link" href="#">Sell</a></li>
                     <li class="nav-item mx-1">
                         <a class="nav-link" href="#">
                             <i class='fa fa-heart'></i>
@@ -60,6 +58,22 @@
                                 Returns
                             </a>
                         </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link" asp-area="" asp-page="/ShippingStatusUser">
+                                <i class='fa fa-truck'></i>
+                                My Shipments
+                            </a>
+                        </li>
+                        @* Chỉ hiển thị cho admin *@
+                        @if (User.IsInRole("admin") || (User.Claims.Any(c => c.Type == "role" && c.Value == "admin")))
+                        {
+                            <li class="nav-item mx-1">
+                                <a class="nav-link" asp-area="" asp-page="/ShippingManagement">
+                                    <i class='fa fa-cogs'></i>
+                                    Shipping Management
+                                </a>
+                            </li>
+                        }
                         <li class="nav-item mx-1">
                             <a class="nav-link" asp-area="" asp-page="/Auth/Logout">
                                 <i class='fas fa-sign-out-alt'></i>

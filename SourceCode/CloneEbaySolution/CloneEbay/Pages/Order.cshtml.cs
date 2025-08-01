@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using CloneEbay.Data;
 using CloneEbay.Data.Entities;
 using CloneEbay.Models;
 using CloneEbay.Services;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,15 +13,17 @@ namespace CloneEbay.Pages
 {
     public class OrderModel : PageModel
     {
-        private readonly CloneEbayDbContext _db;
+        private readonly IAddressService _addressService;
         private readonly CartService _cartService;
         private readonly IOrderService _orderService;
+        private readonly IShippingProvider _shippingProvider;
 
-        public OrderModel(CloneEbayDbContext db, CartService cartService, IOrderService orderService)
+        public OrderModel(IAddressService addressService, CartService cartService, IOrderService orderService, IShippingProvider shippingProvider)
         {
-            _db = db;
+            _addressService = addressService;
             _cartService = cartService;
             _orderService = orderService;
+            _shippingProvider = shippingProvider;
         }
 
         public List<CartItem> CartItems { get; set; } = new();
@@ -48,10 +48,13 @@ namespace CloneEbay.Pages
             var userId = GetUserId();
             if (userId == null)
                 return RedirectToPage("/Auth/Login");
-            Addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
+            
+            Addresses = await _addressService.GetUserAddressesAsync(userId.Value);
             CartItems = _cartService.GetCartItems();
+            
             if (Addresses.Any(a => a.IsDefault == true))
                 SelectedAddressId = Addresses.First(a => a.IsDefault == true).Id;
+            
             // Coupon logic for GET (show discount if code in query)
             if (!string.IsNullOrEmpty(CouponCode))
             {
@@ -69,18 +72,31 @@ namespace CloneEbay.Pages
             var userId = GetUserId();
             if (userId == null)
                 return RedirectToPage("/Auth/Login");
-            NewAddress.UserId = userId;
+
+            // Nếu địa chỉ mới là default, set các địa chỉ khác về not default
             if (NewAddress.IsDefault == true)
             {
-                // Bỏ mặc định các địa chỉ khác
-                var addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
-                foreach (var addr in addresses)
+                var allAddresses = await _addressService.GetUserAddressesAsync(userId.Value);
+                foreach (var addr in allAddresses)
                 {
-                    addr.IsDefault = false;
+                    if (addr.IsDefault == true)
+                    {
+                        addr.IsDefault = false;
+                        await _addressService.UpdateAddressAsync(addr); // cần có hàm update
+                    }
                 }
             }
-            _db.Addresses.Add(NewAddress);
-            await _db.SaveChangesAsync();
+
+            NewAddress.UserId = userId.Value;
+            var success = await _addressService.AddAddressAsync(NewAddress);
+            
+            if (!success)
+            {
+                ModelState.AddModelError("", "Không thể thêm địa chỉ. Vui lòng thử lại.");
+                Addresses = await _addressService.GetUserAddressesAsync(userId.Value);
+                return Page();
+            }
+            
             return RedirectToPage();
         }
 
@@ -89,69 +105,59 @@ namespace CloneEbay.Pages
             var userId = GetUserId();
             if (userId == null)
                 return RedirectToPage("/Auth/Login");
+            
             CartItems = _cartService.GetCartItems();
             if (CartItems.Count == 0)
                 return RedirectToPage("/Cart");
-            var address = await _db.Addresses.FirstOrDefaultAsync(a => a.Id == SelectedAddressId && a.UserId == userId);
+            
+            // Validate address belongs to user
+            var address = await _addressService.GetAddressByIdAsync(SelectedAddressId, userId.Value);
             if (address == null)
             {
                 ModelState.AddModelError("", "Vui lòng chọn địa chỉ giao hàng.");
-                Addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
+                Addresses = await _addressService.GetUserAddressesAsync(userId.Value);
                 return Page();
             }
-            // Coupon validation
-            CouponDiscountPercent = 0;
-            DiscountedTotal = TotalPrice;
-            CouponId = null;
-            if (!string.IsNullOrWhiteSpace(CouponCode))
+            
+            // Create order using service
+            var order = await _orderService.CreateOrderAsync(userId.Value, SelectedAddressId, CouponCode, CartItems);
+            if (order == null)
             {
-                var couponResult = await _orderService.ValidateAndApplyCouponAsync(CouponCode, CartItems);
-                if (!couponResult.IsValid)
-                {
-                    CouponError = couponResult.ErrorMessage ?? "Mã giảm giá không hợp lệ.";
-                    Addresses = await _db.Addresses.Where(a => a.UserId == userId).ToListAsync();
-                    return Page();
-                }
-                CouponDiscountPercent = couponResult.DiscountPercent;
-                CouponId = couponResult.CouponId;
-                DiscountedTotal = TotalPrice * (1 - (CouponDiscountPercent / 100));
+                ModelState.AddModelError("", "Không thể tạo đơn hàng hoặc mã giảm giá không hợp lệ. Vui lòng thử lại.");
+                Addresses = await _addressService.GetUserAddressesAsync(userId.Value);
+                return Page();
+            }
+            
+            // Update coupon usage if used
+            if (order.CouponId.HasValue)
+            {
+                await _orderService.UpdateCouponUsageAsync(order.CouponId.Value);
+            }
+
+            // --- TÍNH PHÍ GIAO HÀNG & TẠO VẬN ĐƠN ---
+            string region = address.GetRegion();
+            decimal shippingFee = CloneEbay.Services.ShippingFeeCalculator.Calculate(region);
+            var shippingRequest = new CloneEbay.Models.ShippingRequestModel
+            {
+                OrderId = order.Id.ToString(),
+                Address = address.GetFullAddress(),
+                UserId = userId.Value.ToString(),
+                Region = region
+            };
+            var shippingResult = await _shippingProvider.CreateShipmentAsync(shippingRequest);
+            if (shippingResult.Success)
+            {
+                // Cập nhật trạng thái shipment (giả lập)
+                await _shippingProvider.UpdateShipmentStatusAsync(shippingResult.ShipmentCode, "Created");
+                // Có thể lưu shipmentCode vào TempData nếu muốn dùng ở Payment
+                TempData["ShipmentCode"] = shippingResult.ShipmentCode;
             }
             else
             {
-                DiscountedTotal = TotalPrice;
+                // Xử lý lỗi tạo vận đơn nếu cần
+                TempData["ShipmentError"] = shippingResult.Message;
             }
-            var order = new OrderTable
-            {
-                BuyerId = userId,
-                AddressId = address.Id,
-                OrderDate = DateTime.UtcNow,
-                TotalPrice = DiscountedTotal,
-                Status = "Pending",
-                CouponId = CouponId
-            };
-            _db.OrderTables.Add(order);
-            await _db.SaveChangesAsync();
-            foreach (var item in CartItems)
-            {
-                var orderItem = new OrderItem
-                {
-                    OrderId = order.Id,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.Price
-                };
-                _db.OrderItems.Add(orderItem);
-            }
-            // Update coupon usage if used
-            if (CouponId.HasValue)
-            {
-                var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Id == CouponId.Value);
-                if (coupon != null)
-                {
-                    coupon.UsedCount = (coupon.UsedCount ?? 0) + 1;
-                }
-            }
-            await _db.SaveChangesAsync();
+
             _cartService.ClearCart();
             return RedirectToPage("/Payment", new { orderId = order.Id });
         }

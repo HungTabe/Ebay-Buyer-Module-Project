@@ -23,14 +23,8 @@
                     <div class="mb-4">
                         <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
                     </div>
-                    <h1 class="text-success mb-3">Order Delivered!</h1>
-                    <p class="lead text-muted">Thank you for confirming receipt. Your order has been marked as <b>delivered</b>.</p>
-                    @if (Model.DeliveryConfirmed)
-                    {
-                        <div class="alert alert-success">
-                            <strong>Order #@Model.Order.Id</strong> has been successfully marked as delivered on @DateTime.Now.ToString("dddd, MMMM dd, yyyy 'at' HH:mm")
-                        </div>
-                    }
+                    <h1 class="text-success mb-3">Order Paid!</h1>
+                    <p class="lead text-muted">Thank you for your payment. Your order has been marked as <b>paid</b> and is being processed for delivery.</p>
                 </div>
 
                 <!-- Order Details Card -->
@@ -47,7 +41,7 @@
                                 <h6 class="text-muted">Order Information</h6>
                                 <p><strong>Order ID:</strong> #@Model.Order.Id</p>
                                 <p><strong>Order Date:</strong> @Model.Order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
-                                <p><strong>Status:</strong> <span class="badge bg-success">Delivered</span></p>
+                                <p><strong>Status:</strong> <span class="badge bg-success">Paid</span></p>
                                 <p><strong>Total Amount:</strong> <span class="h5 text-primary">$@Model.Order.TotalPrice.ToString("F2")</span></p>
                                 @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
                                 {
@@ -113,6 +107,21 @@
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td class="text-end"><strong>$@Model.Subtotal.ToString("F2")</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Shipping Fee:</strong></td>
+                                        <td class="text-end">$@Model.ShippingFee.ToString("F2")</td>
+                                    </tr>
+                                    @if (Model.CouponDiscount > 0)
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Discount (Coupon):</strong></td>
+                                            <td class="text-end">- $@Model.CouponDiscount.ToString("F2")</td>
+                                        </tr>
+                                    }
+                                    <tr>
                                         <td colspan="3" class="text-end"><strong>Total:</strong></td>
                                         <td class="text-end"><strong>$@Model.Order.TotalPrice.ToString("F2")</strong></td>
                                     </tr>
@@ -174,6 +183,12 @@
                         <i class="fas fa-shopping-cart me-2"></i>
                         Continue Shopping
                     </a>
+                    @if (Model.Order.Status != null && Model.Order.Status.ToLower() != "paid")
+                    {
+                        <a href="/Payment?orderId=@Model.Order.Id" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card me-2"></i> Thanh toán ngay
+                        </a>
+                    }
                 </div>
 
                 <!-- Additional Information -->

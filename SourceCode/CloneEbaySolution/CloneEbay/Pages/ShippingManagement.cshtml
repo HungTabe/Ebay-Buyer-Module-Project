@@ -1,0 +1,56 @@
+@page
+@model CloneEbay.Pages.ShippingManagementModel
+@{
+    ViewData["Title"] = "Shipping Management";
+}
+
+<h2 class="mb-4">Shipping Management (Admin)</h2>
+
+<form method="get">
+    <button type="submit" asp-page-handler="ViewLog" class="btn btn-secondary mb-3">View Transaction Log</button>
+</form>
+@if (Model.LogContent != null)
+{
+    <div class="alert alert-info" style="white-space:pre-wrap; max-height:300px; overflow:auto;">@Model.LogContent</div>
+}
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Order ID</th>
+            <th>Shipment Code</th>
+            <th>User</th>
+            <th>Address</th>
+            <th>Status</th>
+            <th>Update Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model.Shipments)
+        {
+            <tr>
+                <td>@s.OrderId</td>
+                <td>@s.TrackingNumber</td>
+                <td>@s.Order?.Buyer?.Username</td>
+                <td>
+                    @s.Order?.Address?.FullName<br />
+                    @s.Order?.Address?.Phone<br />
+                    @s.Order?.Address?.Street, @s.Order?.Address?.City, @s.Order?.Address?.State, @s.Order?.Address?.Country, @s.Order?.Address?.PostalCode
+                </td>
+                <td>@s.Status</td>
+                <td>
+                    <form method="post" asp-page-handler="UpdateStatus" class="d-flex align-items-center">
+                        <input type="hidden" name="UpdateShipmentId" value="@s.Id" />
+                        <select name="UpdateStatus" class="form-select form-select-sm me-2" style="width:auto;">
+                            <option value="Created" selected="@(s.Status=="Created"?"selected":null)">Created</option>
+                            <option value="InTransit" selected="@(s.Status=="InTransit"?"selected":null)">InTransit</option>
+                            <option value="Delivered" selected="@(s.Status=="Delivered"?"selected":null)">Delivered</option>
+                            <option value="Failed" selected="@(s.Status=="Failed"?"selected":null)">Failed</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table> 

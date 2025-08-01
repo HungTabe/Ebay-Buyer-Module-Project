@@ -1,60 +1,178 @@
 @page
 @model CloneEbay.Pages.PaymentModel
 @{
-    ViewData["Title"] = "Thanh toán";
+    ViewData["Title"] = "Payment";
 }
 
-<h2 class="mt-4 mb-4">Thanh toán đơn hàng</h2>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-@if (Model.Order == null)
-{
-    <div class="alert alert-danger">Không tìm thấy đơn hàng.</div>
-}
-else
-{
-    <div class="card mb-4">
-        <div class="card-header">
-            <b>Thông tin đơn hàng #@Model.Order.Id</b>
-        </div>
-        <div class="card-body">
-            <p><b>Ngày đặt:</b> @Model.Order.OrderDate?.ToString("dd/MM/yyyy HH:mm")</p>
-            <p><b>Địa chỉ giao hàng:</b><br />
-                @Model.Order.Address?.FullName - @Model.Order.Address?.Phone<br />
-                @Model.Order.Address?.Street, @Model.Order.Address?.City, @Model.Order.Address?.State, @Model.Order.Address?.Country, @Model.Order.Address?.PostalCode
-            </p>
-            <table class="table table-bordered align-middle">
-                <thead>
-                    <tr>
-                        <th>Tên sản phẩm</th>
-                        <th>Số lượng</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Order.OrderItems)
-                    {
-                        <tr>
-                            <td>@item.Product?.Title</td>
-                            <td>@item.Quantity</td>
-                            <td>$@item.UnitPrice?.ToString("F2")</td>
-                            <td>$@((item.UnitPrice ?? 0) * (item.Quantity ?? 0)).ToString("F2")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <div class="text-end">
-                <b>Tổng cộng: $@Model.Order.TotalPrice?.ToString("F2")</b>
-                @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
-                {
-                    <div><b>Mã giảm giá: @Model.CouponCode (@Model.CouponDiscountPercent% off)</b></div>
-                    <div><b>Thành tiền sau giảm: $@(Model.Order.TotalPrice?.ToString("F2"))</b></div>
-                }
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4"><i class="fas fa-credit-card me-2 text-primary"></i>Checkout</h2>
+            <!-- Step Indicator -->
+            <div class="mb-4">
+                <ul class="nav nav-pills nav-justified">
+                    <li class="nav-item">
+                        <span class="nav-link active"><i class="fas fa-list me-1"></i> Review Order</span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link active"><i class="fas fa-credit-card me-1"></i> Payment</span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link disabled"><i class="fas fa-check-circle me-1"></i> Confirmation</span>
+                    </li>
+                </ul>
             </div>
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+            <div class="mb-3">
+                <div id="countdown-timer" class="alert alert-warning" style="font-size:1.2rem;"></div>
+            </div>
+            @if (Model.Order == null)
+            {
+                <div class="alert alert-danger">Order not found.</div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    <!-- Order Review -->
+                    <div class="col-md-7">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-header bg-light">
+                                <b><i class="fas fa-box me-2"></i>Order #@Model.Order.Id</b>
+                            </div>
+                            <div class="card-body">
+                                <p><b>Order Date:</b> @Model.Order.OrderDate?.ToString("dd/MM/yyyy HH:mm")</p>
+                                <p>
+                                    <b>Shipping Address:</b><br />
+                                    <span class="text-secondary"><i class="fas fa-user me-1"></i>@Model.Order.Address?.FullName</span> - <i class="fas fa-phone me-1"></i>@Model.Order.Address?.Phone<br />
+                                    <span class="text-secondary"><i class="fas fa-location-dot me-1"></i>@Model.Order.Address?.Street, @Model.Order.Address?.City, @Model.Order.Address?.State, @Model.Order.Address?.Country, @Model.Order.Address?.PostalCode</span>
+                                </p>
+                                <table class="table table-bordered align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Qty</th>
+                                            <th>Unit Price</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Order.OrderItems)
+                                        {
+                                            <tr>
+                                                <td>@item.Product?.Title</td>
+                                                <td>@item.Quantity</td>
+                                                <td>$@item.UnitPrice?.ToString("F2")</td>
+                                                <td>$@((item.UnitPrice ?? 0) * (item.Quantity ?? 0))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <div class="text-end mt-2">
+                                    <table class="table table-borderless w-auto float-end mb-0">
+                                        <tr>
+                                            <td class="text-end">Subtotal:</td>
+                                            <td class="text-end">$@Model.Subtotal?.ToString("F2")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-end">Shipping Fee:</td>
+                                            <td class="text-end">$@Model.ShippingFee?.ToString("F2")</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-end">Discount:</td>
+                                            <td class="text-end">- $@Model.Discount?.ToString("F2")</td>
+                                        </tr>
+                                        <tr class="fw-bold border-top">
+                                            <td class="text-end">Total:</td>
+                                            <td class="text-end text-primary">$@Model.OrderTotal?.ToString("F2")</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Payment Section -->
+                    <div class="col-md-5">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-header bg-light">
+                                <b><i class="fas fa-credit-card me-2"></i>Payment</b>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.SecondsLeft > 0)
+                                {
+                                    <!-- Hiển thị form thanh toán như cũ -->
+                                    <form id="payment-form" method="post" asp-page-handler="Pay">
+                                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                                        <input type="hidden" id="stripeToken" name="stripeToken" />
+                                        <div class="mb-3">
+                                            <label for="card-element" class="form-label"><i class="fas fa-credit-card me-1"></i>Card Details</label>
+                                            <div id="card-element" class="form-control p-2"></div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" @(Model.ErrorMessage != null ? "disabled" : null)>
+                                            <i class="fas fa-lock me-2"></i>Pay $@Model.OrderTotal?.ToString("F2")
+                                        </button>
+                                        <div id="payment-spinner" class="text-center mt-2" style="display:none;">
+                                            <i class="fas fa-spinner fa-spin"></i> Processing payment...
+                                        </div>
+                                    </form>
+                                    <div class="alert alert-info mt-3 mb-0">
+                                        <i class="fas fa-info-circle me-1"></i> All transactions are secure and encrypted.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-danger">Order has been cancelled due to payment timeout.</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
-    <form method="post">
-        <input type="hidden" name="orderId" value="@Model.Order.Id" />
-        <button type="submit" asp-page-handler="Pay" class="btn btn-success btn-lg">Thanh toán qua PayOS (giả lập)</button>
-    </form>
-} 
+</div>
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        const stripe = Stripe('@Model.StripePublishableKey');
+        const elements = stripe.elements();
+        const card = elements.create('card', { style: { base: { fontSize: '16px', color: '#32325d' } } });
+        card.mount('#card-element');
+
+        const form = document.getElementById('payment-form');
+        const spinner = document.getElementById('payment-spinner');
+        form && form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            spinner.style.display = 'block';
+            const { token, error } = await stripe.createToken(card);
+            if (error) {
+                spinner.style.display = 'none';
+                alert(error.message);
+                return;
+            }
+            document.getElementById('stripeToken').value = token.id;
+            form.submit();
+        });
+
+        // Countdown timer
+        let seconds = @Model.SecondsLeft;
+        const timerDiv = document.getElementById('countdown-timer');
+        function updateTimer() {
+            if (timerDiv) {
+                timerDiv.textContent = 'Time left to pay: ' + seconds + 's';
+            }
+            if (seconds <= 0) {
+                location.reload();
+            } else {
+                seconds--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+        updateTimer();
+    </script>
+}

@@ -351,5 +351,91 @@ namespace CloneEbay.Services
                 .Include(o => o.Coupon)
                 .FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerId == userId);
         }
+
+        public async Task<OrderTable?> CreateOrderAsync(int userId, int addressId, string couponCode, List<CartItem> cartItems)
+        {
+            try
+            {
+                // Validate address belongs to user
+                var address = await _context.Addresses
+                    .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId);
+                
+                if (address == null)
+                    return null;
+
+                // Calculate total price and apply coupon
+                var totalPrice = cartItems.Sum(x => x.Price * x.Quantity);
+                var discountedTotal = totalPrice;
+                int? couponId = null;
+
+                if (!string.IsNullOrWhiteSpace(couponCode))
+                {
+                    var couponResult = await ValidateAndApplyCouponAsync(couponCode, cartItems);
+                    if (couponResult.IsValid)
+                    {
+                        discountedTotal = totalPrice * (1 - (couponResult.DiscountPercent / 100));
+                        couponId = couponResult.CouponId;
+                    }
+                    else
+                    {
+                        // Return null if coupon is invalid
+                        return null;
+                    }
+                }
+
+                // Create order
+                var order = new OrderTable
+                {
+                    BuyerId = userId,
+                    AddressId = addressId,
+                    OrderDate = DateTime.UtcNow,
+                    TotalPrice = discountedTotal,
+                    Status = "Pending",
+                    CouponId = couponId
+                };
+
+                _context.OrderTables.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Create order items
+                foreach (var item in cartItems)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        OrderId = order.Id,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Price
+                    };
+                    _context.OrderItems.Add(orderItem);
+                }
+
+                await _context.SaveChangesAsync();
+                return order;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateCouponUsageAsync(int couponId)
+        {
+            try
+            {
+                var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Id == couponId);
+                if (coupon != null)
+                {
+                    coupon.UsedCount = (coupon.UsedCount ?? 0) + 1;
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 } 

@@ -1,17 +1,17 @@
 @page
 @model CloneEbay.Pages.OrderHistoryModel
 @{
-    ViewData["Title"] = "Lịch sử đơn hàng";
+    ViewData["Title"] = "Order History";
 }
 
 <div class="container mt-4">
-    <h2 class="mb-4">Lịch sử đơn hàng</h2>
+    <h2 class="mb-4">Order History</h2>
 
     @if (Model.OrderHistory.Orders.Count == 0)
     {
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Bạn chưa có đơn hàng nào.
-            <a href="/Products" class="btn btn-primary btn-sm ms-2">Mua sắm ngay</a>
+            <i class="fas fa-info-circle"></i> You have no orders yet.
+            <a href="/Products" class="btn btn-primary btn-sm ms-2">Shop now</a>
         </div>
     }
     else
@@ -39,10 +39,10 @@
                                 </div>
                             </div>
                             <div class="mb-2">
-                                <strong>Số sản phẩm:</strong> @order.ItemCount
+                                <strong>Items:</strong> @order.ItemCount
                             </div>
                             <a href="/OrderDetail/@order.Id" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="fas fa-eye"></i> Xem chi tiết
+                                <i class="fas fa-eye"></i> View details
                             </a>
                         </div>
                     </div>
@@ -58,7 +58,7 @@
                     @if (Model.OrderHistory.CurrentPage > 1)
                     {
                         <li class="page-item">
-                            <a class="page-link" href="?page=@(Model.OrderHistory.CurrentPage - 1)">Trước</a>
+                            <a class="page-link" href="?page=@(Model.OrderHistory.CurrentPage - 1)">Previous</a>
                         </li>
                     }
 
@@ -72,7 +72,7 @@
                     @if (Model.OrderHistory.CurrentPage < Model.OrderHistory.TotalPages)
                     {
                         <li class="page-item">
-                            <a class="page-link" href="?page=@(Model.OrderHistory.CurrentPage + 1)">Sau</a>
+                            <a class="page-link" href="?page=@(Model.OrderHistory.CurrentPage + 1)">Next</a>
                         </li>
                     }
                 </ul>
@@ -100,13 +100,13 @@
     {
         return status?.ToLower() switch
         {
-            "pending" => "Chờ xử lý",
-            "processing" => "Đang xử lý",
-            "shipped" => "Đã gửi hàng",
-            "delivered" => "Đã giao hàng",
-            "cancelled" => "Đã hủy",
-            "returned" => "Đã trả hàng",
-            _ => status ?? "Không xác định"
+            "pending" => "Pending",
+            "processing" => "Processing",
+            "shipped" => "Shipped",
+            "delivered" => "Delivered",
+            "cancelled" => "Cancelled",
+            "returned" => "Returned",
+            _ => status ?? "Unknown"
         };
     }
 } 
