@@ -18,6 +18,8 @@ namespace CloneEbay.Pages
         public OrderDetailViewModel? OrderDetail { get; set; }
         public bool CanReturnOrder { get; set; }
         public bool HasReturnRequest { get; set; }
+        public string? CouponCode { get; set; }
+        public decimal? CouponDiscountPercent { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -29,6 +31,14 @@ namespace CloneEbay.Pages
             
             if (OrderDetail == null)
                 return NotFound();
+
+            // Get coupon information if available
+            var orderWithCoupon = await _orderService.GetOrderWithCouponAsync(id, userId.Value);
+            if (orderWithCoupon?.Coupon != null)
+            {
+                CouponCode = orderWithCoupon.Coupon.Code;
+                CouponDiscountPercent = orderWithCoupon.Coupon.DiscountPercent;
+            }
 
             // Check if order can be returned
             if (OrderDetail.Status?.ToLower() == "delivered")

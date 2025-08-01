@@ -26,17 +26,20 @@
                             <small class="text-muted">#@order.Id</small>
                         </div>
                         <div class="card-body">
-                            <div class="mb-2">
-                                <strong>Ngày đặt:</strong> @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
-                            </div>
-                            <div class="mb-2">
-                                <strong>Tổng tiền:</strong> $@order.TotalPrice.ToString("F2")
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-1">Order #@order.Id</h6>
+                                    <p class="text-muted mb-1">@order.OrderDate.ToString("MMM dd, yyyy")</p>
+                                    <p class="text-muted mb-2">@order.AddressInfo</p>
+                                    <p class="mb-0"><strong>$@order.TotalPrice.ToString("F2")</strong></p>
+                                    @if (!string.IsNullOrEmpty(order.CouponCode))
+                                    {
+                                        <small class="text-success">Coupon: @order.CouponCode</small>
+                                    }
+                                </div>
                             </div>
                             <div class="mb-2">
                                 <strong>Số sản phẩm:</strong> @order.ItemCount
-                            </div>
-                            <div class="mb-3">
-                                <strong>Địa chỉ:</strong> @order.AddressInfo
                             </div>
                             <a href="/OrderDetail/@order.Id" class="btn btn-outline-primary btn-sm w-100">
                                 <i class="fas fa-eye"></i> Xem chi tiết

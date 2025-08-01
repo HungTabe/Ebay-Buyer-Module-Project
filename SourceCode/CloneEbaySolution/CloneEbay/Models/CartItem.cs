@@ -9,5 +9,7 @@ namespace CloneEbay.Models
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public string ImageUrl { get; set; }
+        // Optional: For coupon logic, to show discounted price per item
+        public decimal? DiscountedPrice { get; set; }
     }
 } 

@@ -20,6 +20,7 @@ namespace CloneEbay.Models
         public string Status { get; set; } = "";
         public int ItemCount { get; set; }
         public string AddressInfo { get; set; } = "";
+        public string? CouponCode { get; set; }
     }
 
     public class OrderDetailViewModel

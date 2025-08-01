@@ -17,6 +17,8 @@ namespace CloneEbay.Pages
 
         public OrderDetailViewModel? Order { get; set; }
         public bool DeliveryConfirmed { get; set; }
+        public string? CouponCode { get; set; }
+        public decimal? CouponDiscountPercent { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int orderId)
         {
@@ -29,6 +31,18 @@ namespace CloneEbay.Pages
 
             // Get order details for display
             Order = await _orderService.GetOrderDetailAsync(orderId, userId.Value);
+
+            // Get coupon information if available
+            if (Order != null)
+            {
+                // We need to get coupon info from the database since OrderDetailViewModel doesn't include it
+                var orderWithCoupon = await _orderService.GetOrderWithCouponAsync(orderId, userId.Value);
+                if (orderWithCoupon?.Coupon != null)
+                {
+                    CouponCode = orderWithCoupon.Coupon.Code;
+                    CouponDiscountPercent = orderWithCoupon.Coupon.DiscountPercent;
+                }
+            }
 
             return Page();
         }

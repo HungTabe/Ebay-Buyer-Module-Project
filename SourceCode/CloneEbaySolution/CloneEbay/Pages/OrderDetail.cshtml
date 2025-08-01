@@ -27,6 +27,10 @@
                             <div class="col-md-6">
                                 <p><strong>Ngày đặt:</strong> @Model.OrderDetail.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
                                 <p><strong>Tổng tiền:</strong> $@Model.OrderDetail.TotalPrice.ToString("F2")</p>
+                                @if (!string.IsNullOrEmpty(Model.CouponCode) && Model.CouponDiscountPercent > 0)
+                                {
+                                    <p><strong>Mã giảm giá:</strong> <span class="text-success">@Model.CouponCode (@Model.CouponDiscountPercent% off)</span></p>
+                                }
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Số sản phẩm:</strong> @Model.OrderDetail.Items.Count</p>
