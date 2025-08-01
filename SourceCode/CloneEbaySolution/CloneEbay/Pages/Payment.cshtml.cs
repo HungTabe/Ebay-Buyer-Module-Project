@@ -68,8 +68,13 @@ namespace CloneEbay.Pages
             {
                 paymentStartTime = DateTime.Parse(HttpContext.Session.GetString(sessionKey));
             }
+
+
+
             var elapsed = (DateTime.Now - paymentStartTime).TotalSeconds;
             SecondsLeft = OrderTimeoutSeconds - (int)elapsed;
+
+
             if (SecondsLeft <= 0)
             {
                 var cancelled = await _orderTimeoutService.CancelOrderIfTimeoutAsync(orderId, 0); // force cancel
@@ -77,11 +82,15 @@ namespace CloneEbay.Pages
                 SecondsLeft = 0;
                 return Page();
             }
+
+
             if (Order.Coupon != null)
             {
                 CouponCode = Order.Coupon.Code;
                 CouponDiscountPercent = Order.Coupon.DiscountPercent;
             }
+
+
             // --- TÍNH TỔNG TIỀN ĐƠN HÀNG ---
             string region = Order.Address != null ? Order.Address.GetRegion() : "Unknown";
             decimal productPrice = Order.OrderItems.Sum(oi => (oi.UnitPrice ?? 0) * (oi.Quantity ?? 0));

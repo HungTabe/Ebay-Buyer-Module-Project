@@ -30,6 +30,14 @@ INSERT INTO [Category] (name, parentId) VALUES
 (N'Comics', 3),
 (N'Textbooks', 3); 
 
+
+-- 1. User (Người mua và người bán)
+INSERT INTO [User] (username, email, password, role, isVerified, createdAt) VALUES
+('buyer1', 'buyer1@example.com', 'hashedpassword123', 'Buyer', 1, GETDATE()),
+('buyer2', 'buyer2@example.com', 'hashedpassword123', 'Buyer', 1, GETDATE()),
+('seller1', 'seller1@example.com', 'hashedpassword123', 'Seller', 1, GETDATE()),
+('seller2', 'seller2@example.com', 'hashedpassword123', 'Seller', 1, GETDATE());
+
 -- Thêm thêm products với đa dạng hơn
 INSERT INTO [Product] (title, description, price, images, categoryId, sellerId, isAuction, auctionEndTime, condition, createdAt) VALUES
 -- Electronics

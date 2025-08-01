@@ -59,7 +59,11 @@ namespace CloneEbay.Pages
             int? userId = GetUserId();
             if (userId == null)
                 return RedirectToPage();
+
+
             var updated = await _shippingInfoService.UpdateShipmentStatusAsync(UpdateShipmentId, userId.Value, UpdateStatus);
+
+
             if (updated)
             {
                 // Lấy lại shipment và order để gửi email
