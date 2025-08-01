@@ -3,6 +3,9 @@
 ## Project Overview
 CloneEbay is an e-commerce platform mimicking eBay's functionality, built for buyers with RazorPage for both frontend and backend, integrated with PayOS for payments. Group 1 focuses on buyer features, ensuring a secure, responsive, and scalable system.
 
+## Project DEMO
+https://youtu.be/gZDVn3pkFTM
+
 ## Features
 - **User Management**: Register (email, password, email verification), login/logout, update personal info.
 - **Product Browsing**: List products with pagination, filter by category/price/name, view product details (images, description, seller, reviews).
