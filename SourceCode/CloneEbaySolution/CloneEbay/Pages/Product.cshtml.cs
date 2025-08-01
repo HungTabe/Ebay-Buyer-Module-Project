@@ -21,6 +21,7 @@ namespace CloneEbay.Pages
         public int Quantity { get; set; } = 1;
 
         public ProductViewModel? Product { get; set; }
+        public ProductReviewViewModel? ProductReviews { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -30,6 +31,9 @@ namespace CloneEbay.Pages
             {
                 return RedirectToPage("/Error");
             }
+
+            // Get reviews for the product
+            ProductReviews = await _productService.GetProductReviewsAsync(id);
 
             return Page();
         }
