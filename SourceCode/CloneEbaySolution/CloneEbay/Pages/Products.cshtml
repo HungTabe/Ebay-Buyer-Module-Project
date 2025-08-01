@@ -1,0 +1,315 @@
+@page
+@model CloneEbay.Pages.ProductsModel
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary">
+                <i class="fas fa-shopping-bag me-2"></i>Browse Products
+            </h2>
+            <p class="text-muted">Find great deals on thousands of items</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="filterForm">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Search</label>
+                            <input asp-for="Filter.SearchTerm" class="form-control" placeholder="Search products..." />
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category</label>
+                            <select asp-for="Filter.CategoryId" class="form-select">
+                                <option value="">All Categories</option>
+                                @foreach (var category in Model.ProductList.Categories)
+                                {
+                                    <option value="@category.Id">@category.Name (@category.ProductCount)</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Price Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input asp-for="Filter.MinPrice" type="number" step="0.01" class="form-control" placeholder="Min" />
+                                </div>
+                                <div class="col-6">
+                                    <input asp-for="Filter.MaxPrice" type="number" step="0.01" class="form-control" placeholder="Max" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Condition -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Condition</label>
+                            <select asp-for="Filter.Condition" class="form-select">
+                                <option value="">Any Condition</option>
+                                <option value="New">New</option>
+                                <option value="Used">Used</option>
+                                <option value="Refurbished">Refurbished</option>
+                            </select>
+                        </div>
+
+                        <!-- Auction Filter -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="Filter.IsAuction" type="checkbox" class="form-check-input" id="auctionFilter" />
+                                <label class="form-check-label" for="auctionFilter">
+                                    Auction Items Only
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sort -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Sort By</label>
+                            <select asp-for="Filter.SortBy" class="form-select mb-2">
+                                <option value="date">Date Listed</option>
+                                <option value="name">Name</option>
+                                <option value="price">Price</option>
+                            </select>
+                            <select asp-for="Filter.SortOrder" class="form-select">
+                                <option value="desc">Newest/High to Low</option>
+                                <option value="asc">Oldest/Low to High</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Apply Filters
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Results Summary -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="text-muted">
+                        Showing @((Model.ProductList.CurrentPage - 1) * Model.ProductList.Filter.PageSize + 1) - 
+                        @Math.Min(Model.ProductList.CurrentPage * Model.ProductList.Filter.PageSize, Model.ProductList.TotalCount) 
+                        of @Model.ProductList.TotalCount results
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="changeView('grid')">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="changeView('list')">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            @if (Model.ProductList.Products.Any())
+            {
+                <!-- Products Grid -->
+                <div class="row" id="productsGrid">
+                    @foreach (var product in Model.ProductList.Products)
+                    {
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 product-card shadow-sm">
+                                <div class="position-relative">
+                                    @if (!string.IsNullOrEmpty(product.Images))
+                                    {
+                                        <img src="@product.Images.Split(',')[0]" class="card-img-top" alt="@product.Title" 
+                                             style="height: 200px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 200px;">
+                                            <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                                        </div>
+                                    }
+                                    
+                                    @if (product.IsAuction)
+                                    {
+                                        <span class="position-absolute top-0 start-0 badge bg-warning text-dark m-2">
+                                            <i class="fas fa-gavel me-1"></i>Auction
+                                        </span>
+                                    }
+                                    
+                                    @if (product.BidCount > 0)
+                                    {
+                                        <span class="position-absolute top-0 end-0 badge bg-info m-2">
+                                            @product.BidCount bids
+                                        </span>
+                                    }
+                                </div>
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title text-truncate">@product.Title</h6>
+                                    <p class="card-text text-muted small text-truncate">@product.Description</p>
+                                    
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold text-primary">$@product.Price.ToString("F2")</span>
+                                            <small class="text-muted">@product.CategoryName</small>
+                                        </div>
+                                        
+                                        @if (product.IsAuction && product.AuctionEndTime.HasValue)
+                                        {
+                                            <div class="small text-danger mb-2">
+                                                <i class="fas fa-clock me-1"></i>
+                                                Ends: @product.AuctionEndTime.Value.ToString("MMM dd, yyyy HH:mm")
+                                            </div>
+                                        }
+                                        
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">by @product.SellerName</small>
+                                            <small class="text-muted">@product.Condition</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent">
+                                    <a href="/Product/@product.Id" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.ProductList.TotalPages > 1)
+                {
+                    <nav aria-label="Products pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.ProductList.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(Model.ProductList.CurrentPage - 1)&@GetQueryString()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.ProductList.CurrentPage - 2); 
+                                   i <= Math.Min(Model.ProductList.TotalPages, Model.ProductList.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.ProductList.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="?page=@i&@GetQueryString()">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.ProductList.CurrentPage < Model.ProductList.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(Model.ProductList.CurrentPage + 1)&@GetQueryString()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No products found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all categories.</p>
+                    <a href="/Products" class="btn btn-primary">
+                        <i class="fas fa-refresh me-1"></i>Clear Filters
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetQueryString()
+    {
+        var queryParams = new List<string>();
+        
+        if (!string.IsNullOrEmpty(Model.Filter.SearchTerm))
+            queryParams.Add($"SearchTerm={Uri.EscapeDataString(Model.Filter.SearchTerm)}");
+        
+        if (Model.Filter.CategoryId.HasValue)
+            queryParams.Add($"CategoryId={Model.Filter.CategoryId}");
+        
+        if (Model.Filter.MinPrice.HasValue)
+            queryParams.Add($"MinPrice={Model.Filter.MinPrice}");
+        
+        if (Model.Filter.MaxPrice.HasValue)
+            queryParams.Add($"MaxPrice={Model.Filter.MaxPrice}");
+        
+        if (!string.IsNullOrEmpty(Model.Filter.Condition))
+            queryParams.Add($"Condition={Uri.EscapeDataString(Model.Filter.Condition)}");
+        
+        if (Model.Filter.IsAuction)
+            queryParams.Add($"IsAuction=true");
+        
+        if (!string.IsNullOrEmpty(Model.Filter.SortBy))
+            queryParams.Add($"SortBy={Uri.EscapeDataString(Model.Filter.SortBy)}");
+        
+        if (!string.IsNullOrEmpty(Model.Filter.SortOrder))
+            queryParams.Add($"SortOrder={Uri.EscapeDataString(Model.Filter.SortOrder)}");
+        
+        return string.Join("&", queryParams);
+    }
+}
+
+@section Scripts {
+    <script>
+        function changeView(viewType) {
+            const grid = document.getElementById('productsGrid');
+            if (viewType === 'list') {
+                grid.classList.add('list-view');
+            } else {
+                grid.classList.remove('list-view');
+            }
+        }
+    </script>
+}
+
+<style>
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .list-view .col-xl-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .list-view .product-card {
+        flex-direction: row;
+    }
+    
+    .list-view .card-img-top {
+        width: 200px;
+        height: 150px !important;
+        flex-shrink: 0;
+    }
+</style> 

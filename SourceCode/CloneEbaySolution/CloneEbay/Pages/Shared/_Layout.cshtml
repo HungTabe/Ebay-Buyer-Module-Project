@@ -17,8 +17,8 @@
                 <a class="navbar-brand d-flex align-items-center" asp-area="" asp-page="/Index" style="font-size:2rem; font-weight:bold; color:#e53238;">
                     <span style="color:#e53238;">e</span><span style="color:#0064d2;">b</span><span style="color:#f5af02;">a</span><span style="color:#86b817;">y</span>
                 </a>
-                <form class="d-flex mx-3 flex-grow-1" style="max-width:600px;">
-                    <input class="form-control me-2" type="search" placeholder="Search for anything" aria-label="Search">
+                <form class="d-flex mx-3 flex-grow-1" style="max-width:600px;" action="/Products" method="get">
+                    <input class="form-control me-2" type="search" name="SearchTerm" placeholder="Search for anything" aria-label="Search">
                     <button class="btn btn-outline-primary d-flex align-items-center justify-content-center" type="submit" aria-label="Search">
                         <i class='fa fa-search'></i>
                     </button>
@@ -35,7 +35,11 @@
                         </a>
                     </li>
                     <li class="nav-item mx-1">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" asp-area="" asp-page="/Products">
+                            <i class='fa fa-shopping-bag'></i>
+                            Products
+                        </a>
+                    </li>
                     <li class="nav-item mx-1">
                         <a class="nav-link" asp-area="" asp-page="/Profile">
                             <i class='fa fa-user'></i>
