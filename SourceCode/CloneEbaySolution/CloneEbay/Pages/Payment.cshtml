@@ -48,16 +48,8 @@ else
             </div>
         </div>
     </div>
-    @if (string.IsNullOrEmpty(Model.Message))
-    {
-        <form method="post">
-            <input type="hidden" name="orderId" value="@Model.Order.Id" />
-            <button type="submit" asp-page-handler="Pay" class="btn btn-success btn-lg">Thanh toán qua PayOS (giả lập)</button>
-        </form>
-    }
-    else
-    {
-        <div class="alert alert-success">@Model.Message</div>
-        <a href="/Products" class="btn btn-primary">Tiếp tục mua sắm</a>
-    }
+    <form method="post">
+        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+        <button type="submit" asp-page-handler="Pay" class="btn btn-success btn-lg">Thanh toán qua PayOS (giả lập)</button>
+    </form>
 } 

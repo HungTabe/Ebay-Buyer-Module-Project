@@ -16,6 +16,8 @@ namespace CloneEbay.Pages
         }
 
         public OrderDetailViewModel? OrderDetail { get; set; }
+        public bool CanReturnOrder { get; set; }
+        public bool HasReturnRequest { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -27,6 +29,14 @@ namespace CloneEbay.Pages
             
             if (OrderDetail == null)
                 return NotFound();
+
+            // Check if order can be returned
+            if (OrderDetail.Status?.ToLower() == "delivered")
+            {
+                CanReturnOrder = await _orderService.CanReturnOrderAsync(id, userId.Value);
+                HasReturnRequest = !CanReturnOrder && await _orderService.GetReturnRequestsAsync(userId.Value, 1, 100)
+                    .ContinueWith(t => t.Result.ReturnRequests.Any(r => r.OrderId == id));
+            }
 
             return Page();
         }

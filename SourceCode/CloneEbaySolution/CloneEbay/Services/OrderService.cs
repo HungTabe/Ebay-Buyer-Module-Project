@@ -138,5 +138,159 @@ namespace CloneEbay.Services
                 new OrderStatusViewModel { Value = "Returned", DisplayName = "Đã trả hàng" }
             };
         }
+
+        public async Task<bool> CreateReturnRequestAsync(CreateReturnRequestModel model, int userId)
+        {
+            // Check if order exists and belongs to user
+            var order = await _context.OrderTables
+                .FirstOrDefaultAsync(o => o.Id == model.OrderId && o.BuyerId == userId);
+
+            if (order == null)
+                return false;
+
+            // Check if order can be returned (delivered and within return window)
+            if (!await CanReturnOrderAsync(model.OrderId, userId))
+                return false;
+
+            // Check if return request already exists
+            var existingRequest = await _context.ReturnRequests
+                .FirstOrDefaultAsync(r => r.OrderId == model.OrderId && r.UserId == userId);
+
+            if (existingRequest != null)
+                return false;
+
+            var returnRequest = new ReturnRequest
+            {
+                OrderId = model.OrderId,
+                UserId = userId,
+                Reason = model.Reason,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.ReturnRequests.Add(returnRequest);
+            await _context.SaveChangesAsync();
+
+            // Cập nhật trạng thái đơn hàng
+            order.Status = "Return Processing";
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<ReturnRequestListViewModel> GetReturnRequestsAsync(int userId, int page = 1, int pageSize = 10)
+        {
+            var query = _context.ReturnRequests
+                .Include(r => r.Order)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var returnRequests = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var returnRequestViewModels = returnRequests.Select(r => new ReturnRequestViewModel
+            {
+                Id = r.Id,
+                OrderId = r.OrderId ?? 0,
+                UserId = r.UserId ?? 0,
+                Reason = r.Reason ?? "",
+                Status = r.Status ?? "",
+                CreatedAt = r.CreatedAt ?? DateTime.UtcNow,
+                Order = r.Order != null ? new OrderSummaryViewModel
+                {
+                    Id = r.Order.Id,
+                    OrderDate = r.Order.OrderDate ?? DateTime.UtcNow,
+                    TotalPrice = r.Order.TotalPrice ?? 0,
+                    Status = r.Order.Status ?? "",
+                    ItemCount = r.Order.OrderItems?.Count ?? 0,
+                    AddressInfo = r.Order.Address != null 
+                        ? $"{r.Order.Address.FullName ?? ""} - {r.Order.Address.City ?? ""}, {r.Order.Address.State ?? ""}"
+                        : "No address"
+                } : null
+            }).ToList();
+
+            return new ReturnRequestListViewModel
+            {
+                ReturnRequests = returnRequestViewModels,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<ReturnRequestViewModel?> GetReturnRequestAsync(int returnRequestId, int userId)
+        {
+            var returnRequest = await _context.ReturnRequests
+                .Include(r => r.Order)
+                .FirstOrDefaultAsync(r => r.Id == returnRequestId && r.UserId == userId);
+
+            if (returnRequest == null)
+                return null;
+
+            return new ReturnRequestViewModel
+            {
+                Id = returnRequest.Id,
+                OrderId = returnRequest.OrderId ?? 0,
+                UserId = returnRequest.UserId ?? 0,
+                Reason = returnRequest.Reason ?? "",
+                Status = returnRequest.Status ?? "",
+                CreatedAt = returnRequest.CreatedAt ?? DateTime.UtcNow,
+                Order = returnRequest.Order != null ? new OrderSummaryViewModel
+                {
+                    Id = returnRequest.Order.Id,
+                    OrderDate = returnRequest.Order.OrderDate ?? DateTime.UtcNow,
+                    TotalPrice = returnRequest.Order.TotalPrice ?? 0,
+                    Status = returnRequest.Order.Status ?? "",
+                    ItemCount = returnRequest.Order.OrderItems?.Count ?? 0,
+                    AddressInfo = returnRequest.Order.Address != null 
+                        ? $"{returnRequest.Order.Address.FullName ?? ""} - {returnRequest.Order.Address.City ?? ""}, {returnRequest.Order.Address.State ?? ""}"
+                        : "No address"
+                } : null
+            };
+        }
+
+        public async Task<bool> ConfirmOrderDeliveredAsync(int orderId, int userId)
+        {
+            var order = await _context.OrderTables.FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerId == userId);
+            if (order == null)
+                return false;
+            order.Status = "Delivered";
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CanReturnOrderAsync(int orderId, int userId)
+        {
+            var order = await _context.OrderTables
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerId == userId);
+
+            if (order == null)
+                return false;
+
+            // Check if order is delivered
+            if (order.Status != "Delivered")
+                return false;
+
+            // Check if order is within return window (30 days from delivery)
+            var orderDate = order.OrderDate ?? DateTime.UtcNow;
+            var returnDeadline = orderDate.AddDays(30);
+            
+            if (DateTime.UtcNow > returnDeadline)
+                return false;
+
+            // Check if return request already exists
+            var existingRequest = await _context.ReturnRequests
+                .FirstOrDefaultAsync(r => r.OrderId == orderId && r.UserId == userId);
+            return existingRequest == null;
+
+            
+
+        }
     }
 } 

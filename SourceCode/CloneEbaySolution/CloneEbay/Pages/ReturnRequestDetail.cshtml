@@ -1,0 +1,110 @@
+@page "{id:int}"
+@model CloneEbay.Pages.ReturnRequestDetailModel
+@{
+    ViewData["Title"] = "Return Request Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if (Model.ReturnRequest != null)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">Return Request #@Model.ReturnRequest.Id</h3>
+                            <span class="badge @GetStatusBadgeClass(Model.ReturnRequest.Status) fs-6">@Model.ReturnRequest.Status</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Request Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Request ID:</dt>
+                                    <dd class="col-sm-8">#@Model.ReturnRequest.Id</dd>
+
+                                    <dt class="col-sm-4">Order ID:</dt>
+                                    <dd class="col-sm-8">#@Model.ReturnRequest.OrderId</dd>
+
+                                    <dt class="col-sm-4">Created Date:</dt>
+                                    <dd class="col-sm-8">@Model.ReturnRequest.CreatedAt.ToString("MM/dd/yyyy HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Reason:</dt>
+                                    <dd class="col-sm-8">@Model.ReturnRequest.Reason</dd>
+                                </dl>
+
+
+                            </div>
+
+                            @if (Model.ReturnRequest.Order != null)
+                            {
+                                <div class="col-md-6">
+                                    <h5>Order Information</h5>
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Order Date:</dt>
+                                        <dd class="col-sm-8">@Model.ReturnRequest.Order.OrderDate.ToString("MM/dd/yyyy")</dd>
+
+                                        <dt class="col-sm-4">Total Amount:</dt>
+                                        <dd class="col-sm-8">$@Model.ReturnRequest.Order.TotalPrice.ToString("F2")</dd>
+
+                                        <dt class="col-sm-4">Items:</dt>
+                                        <dd class="col-sm-8">@Model.ReturnRequest.Order.ItemCount</dd>
+
+                                        <dt class="col-sm-4">Shipping Address:</dt>
+                                        <dd class="col-sm-8">@Model.ReturnRequest.Order.AddressInfo</dd>
+                                    </dl>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mt-4">
+                            <h5>Return Process Information</h5>
+                            <div class="alert alert-info">
+                                <h6>What happens next?</h6>
+                                <ul class="mb-0">
+                                    <li>Our customer service team will review your return request within 1-2 business days</li>
+                                    <li>You will receive an email notification with the decision</li>
+                                    <li>If approved, you'll receive return shipping instructions</li>
+                                    <li>Once we receive the returned items, we'll process your refund</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between">
+                            <a asp-page="/ReturnRequests" class="btn btn-secondary">Back to Return Requests</a>
+                            <a asp-page="/OrderDetail" asp-route-id="@Model.ReturnRequest.OrderId" class="btn btn-outline-primary">View Original Order</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center">
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading">Return Request Not Found</h4>
+                        <p>The return request you're looking for doesn't exist or you don't have permission to view it.</p>
+                        <hr>
+                        <a asp-page="/ReturnRequests" class="btn btn-primary">Back to Return Requests</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "approved" => "bg-success",
+            "rejected" => "bg-danger",
+            "processing" => "bg-info",
+            "completed" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+} 
