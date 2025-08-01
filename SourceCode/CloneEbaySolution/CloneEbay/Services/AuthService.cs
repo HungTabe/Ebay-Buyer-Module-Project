@@ -130,4 +130,44 @@ public class AuthService : IAuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public async Task<User?> GetUserByIdAsync(int userId)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    public async Task<bool> UpdateProfileAsync(int userId, ProfileUpdateModel model)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Check if email is already taken by another user
+        if (await _context.Users.AnyAsync(u => u.Email == model.Email && u.Id != userId))
+        {
+            return false;
+        }
+
+        // Check if username is already taken by another user
+        if (await _context.Users.AnyAsync(u => u.Username == model.Username && u.Id != userId))
+        {
+            return false;
+        }
+
+        // Update user information
+        user.Username = model.Username;
+        user.Email = model.Email;
+        user.AvatarUrl = model.AvatarUrl;
+
+        // Update password if provided
+        if (!string.IsNullOrEmpty(model.NewPassword))
+        {
+            user.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 } 

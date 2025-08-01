@@ -5,25 +5,104 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to CloneEbay</h1>
-    <p>Your online marketplace for buying and selling.</p>
-    
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <div class="alert alert-success mt-4">
-            <h5>Welcome back, @User.Identity.Name!</h5>
-            <p>You are logged in as: @User.FindFirst(ClaimTypes.Email)?.Value</p>
-            <p>Role: @User.FindFirst(ClaimTypes.Role)?.Value</p>
+<!-- Hero Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="p-4 text-white rounded" style="background: linear-gradient(90deg, #e53238 0%, #0064d2 100%); min-height: 260px; display: flex; align-items: center;">
+            <div>
+                <h1 class="display-4 fw-bold">Welcome to eBay</h1>
+                <p class="lead">Discover amazing deals, rare finds, and everything in between!</p>
+                <a href="#" class="btn btn-warning btn-lg mt-2">Shop Now</a>
+            </div>
+            @* <img src="https://ir.ebaystatic.com/cr/v/c1/hero_homepage_v2.png" alt="eBay Banner" class="ms-auto d-none d-md-block" style="max-height:200px;"> *@
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info mt-4">
-            <h5>Please login to continue</h5>
-            <p>You need to be logged in to access all features.</p>
-            <a asp-page="/Auth/Login" class="btn btn-primary">Login</a>
-            <a asp-page="/Auth/Register" class="btn btn-secondary">Register</a>
+    </div>
+</div>
+
+<!-- Categories -->
+<div class="row text-center mb-5">
+    <h2 class="mb-4">Shop by Category</h2>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fa fa-tv fa-2x mb-2 text-primary"></i>
+                <div>Electronics</div>
+            </div>
         </div>
-    }
+    </div>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-tshirt fa-2x mb-2 text-primary"></i>
+                <div>Fashion</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fa fa-car fa-2x mb-2 text-danger"></i>
+                <div>Motors</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fa fa-paint-brush fa-2x mb-2 text-warning"></i>
+                <div>Collectibles</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-couch fa-2x mb-2 text-info"></i>
+                <div>Home & Garden</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fa fa-soccer-ball-o fa-2x mb-2 text-secondary"></i>
+                <div>Sporting Goods</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<div class="row mb-5">
+    <h2 class="mb-4 text-center">Featured Deals</h2>
+    <div class="col-12 col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="https://bizweb.dktcdn.net/thumb/large/100/318/659/products/iphone-14-pro-max-gold-pure-back-iphone-14-pro-max-gold-pure-front-2-up-screen-usen-3a31b018-9188-4139-85d5-5dc6b01eddb4-6cf01881-9d8d-4b8b-8eb9-2aa584dc6ff8.png" class="card-img-top" alt="Product 1">
+            <div class="card-body">
+                <h5 class="card-title">Apple iPhone 14 Pro</h5>
+                <p class="card-text text-success fw-bold">$899.99 <span class="text-muted text-decoration-line-through">$999.99</span></p>
+                <a href="#" class="btn btn-primary">Buy Now</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="https://cdn.storims.com/api/v2/image/resize?path=https://storage.googleapis.com/storims_cdn/storims/uploads/3dc6e23dfcae37c4e9b9338f2e296b13.jpeg&format=jpeg" class="card-img-top" alt="Product 2">
+            <div class="card-body">
+                <h5 class="card-title">Nike Air Max 270</h5>
+                <p class="card-text text-success fw-bold">$129.99 <span class="text-muted text-decoration-line-through">$159.99</span></p>
+                <a href="#" class="btn btn-primary">Buy Now</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="https://s3-us-west-2.amazonaws.com/media.brothers-brick.com/2021/06/LEGO-Star-Wars-75312-Boba-Fetts-Starship-ZCA7Y-1-640x661.jpg" class="card-img-top" alt="Product 3">
+            <div class="card-body">
+                <h5 class="card-title">LEGO Star Wars Set</h5>
+                <p class="card-text text-success fw-bold">$49.99 <span class="text-muted text-decoration-line-through">$69.99</span></p>
+                <a href="#" class="btn btn-primary">Buy Now</a>
+            </div>
+        </div>
+    </div>
 </div>

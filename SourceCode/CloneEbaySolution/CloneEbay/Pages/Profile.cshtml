@@ -1,0 +1,107 @@
+@page
+@model CloneEbay.Pages.ProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        My Profile
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.Message))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @Model.Message
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @Model.ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProfileUpdate.Username" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>Username
+                                </label>
+                                <input asp-for="ProfileUpdate.Username" class="form-control" placeholder="Enter username" />
+                                <span asp-validation-for="ProfileUpdate.Username" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ProfileUpdate.Email" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i>Email
+                                </label>
+                                <input asp-for="ProfileUpdate.Email" type="email" class="form-control" placeholder="Enter email" />
+                                <span asp-validation-for="ProfileUpdate.Email" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ProfileUpdate.AvatarUrl" class="form-label fw-bold">
+                                <i class="fas fa-image me-1"></i>Avatar URL
+                            </label>
+                            <input asp-for="ProfileUpdate.AvatarUrl" class="form-control" placeholder="Enter avatar image URL" />
+                            <div class="form-text">Enter a URL to your profile picture</div>
+                            <span asp-validation-for="ProfileUpdate.AvatarUrl" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="mb-0 text-muted">
+                                    <i class="fas fa-lock me-2"></i>Change Password (Optional)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ProfileUpdate.NewPassword" class="form-label fw-bold">New Password</label>
+                                        <input asp-for="ProfileUpdate.NewPassword" type="password" class="form-control" placeholder="Enter new password" />
+                                        <span asp-validation-for="ProfileUpdate.NewPassword" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ProfileUpdate.ConfirmPassword" class="form-label fw-bold">Confirm Password</label>
+                                        <input asp-for="ProfileUpdate.ConfirmPassword" type="password" class="form-control" placeholder="Confirm new password" />
+                                        <span asp-validation-for="ProfileUpdate.ConfirmPassword" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="/" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+} 
