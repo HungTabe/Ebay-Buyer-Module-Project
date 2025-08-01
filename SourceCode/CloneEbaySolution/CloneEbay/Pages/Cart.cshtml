@@ -1,0 +1,56 @@
+@page
+@model CloneEbay.Pages.CartModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<h2 class="mt-4 mb-4">Your Shopping Cart</h2>
+
+@if (Model.CartItems.Count == 0)
+{
+    <div class="alert alert-info">Your cart is empty.</div>
+}
+else
+{
+    <form method="post">
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.CartItems)
+                {
+                    <tr>
+                        <td style="width:100px"><img src="@item.ImageUrl" alt="@item.ProductName" style="width:80px;height:80px;object-fit:cover" /></td>
+                        <td>@item.ProductName</td>
+                        <td>$@item.Price.ToString("F2")</td>
+                        <td>
+                            <form method="post">
+                                <input type="hidden" name="UpdateProductId" value="@item.ProductId" />
+                                <input type="number" name="UpdateQuantity" value="@item.Quantity" min="1" class="form-control d-inline-block" style="width:80px" />
+                                <button type="submit" asp-page-handler="UpdateQuantity" class="btn btn-sm btn-outline-primary ms-2">Update</button>
+                            </form>
+                        </td>
+                        <td>$@(item.Price * item.Quantity)</td>
+                        <td>
+                            <form method="post">
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <button type="submit" asp-page-handler="Remove" class="btn btn-sm btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </form>
+    <div class="d-flex justify-content-end">
+        <a href="/Order" class="btn btn-success btn-lg">Proceed to Checkout</a>
+    </div>
+}
